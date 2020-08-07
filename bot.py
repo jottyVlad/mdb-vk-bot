@@ -14,8 +14,10 @@ from loguru import logger
 import re
 import asyncio
 from tortoise import Tortoise, run_async
-from models import Conversation, User
+from models import Conversation, User, GlobalUser, GlobalRole
+import typing
 
+logger.info("IMPORTED MODULES")
 async def init():
 
     await Tortoise.init(
@@ -27,15 +29,34 @@ async def init():
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 run_async(init())
+logger.info("DATABASE CONNECTED")
 
 admins_in_conv = [444944367, 10885998, 26211044, 500101793]
 
 bot = Bot(ACCESS_TOKEN)
 user = vkBottleUser(USER_ACCESS_TOKEN)
+logger.info("BOT AND USER CONNECTED")
 
 with open('settings.json', 'r') as read_file:
     data = ujson.load(read_file)
     access_for_all = data['access']
+
+
+logger.info("SETTINGS READ")
+
+async def check_in_db_and_add_if_not_exist(user_id : int, peer_id : int, warns : int=0) -> typing.Tuple[User, GlobalUser]:
+    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
+    global_profile = await GlobalUser.get_or_none(user_id=user_id)
+    if profile == None:
+        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
+        profile = await User.get(user_id=user_id, peer_id=peer_id)
+
+    if global_profile == None:
+        default_role = await GlobalRole.get(name="Default")
+        await GlobalUser(user_id=user_id, global_role=default_role).save()
+        global_profile = GlobalUser.get(user_id=user_id)
+
+    return (profile, global_profile)
 
 @bot.on.chat_invite()
 async def invite_message(action : Message):
@@ -48,16 +69,20 @@ async def invite_message(action : Message):
     await Conversation(peer_id=action.peer_id).save()
     await Tortoise.close_connections()
 
-@bot.on.message_handler(OnlyAdminAccess(), AccessForBotAdmin(), text="тест", lower=True)
+@bot.on.message_handler(OnlyAdminAccess(), OnlyBotAdminAccess(), text="тест", lower=True)
 async def test_message(ans : Message):
     await ans("Привет, чувачелла")
 
 @bot.on.message_handler(AccessForAllRule(), text="привет", lower=True)
 async def hi_message(ans : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(ans.from_id, ans.peer_id)
     await ans("Привет, чувачелла")
 
 @bot.on.message_handler(AccessForAllRule(), text="максим", lower=True)
 async def maxim_message(ans : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(ans.from_id, ans.peer_id)
     await user.api.request('messages.send', 
                             { 'message': "Максим админ тут да ага бота создаватель в беседе повеливатель ага да м-да...",  
                             'group_id': bot.group_id,
@@ -67,6 +92,8 @@ async def maxim_message(ans : Message):
 
 @bot.on.message_handler(AccessForAllRule(), text="мда", lower=True)
 async def mda_message(ans : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(ans.from_id, ans.peer_id)
     await user.api.request('messages.send', 
                             { 'message': "Да мда конечно это такое мда что прямо м-да...",  
                             'group_id': bot.group_id,
@@ -78,22 +105,20 @@ async def mda_message(ans : Message):
 async def profile_message(message : Message):
     await init()
     if message.reply_message and message.from_id in admins_in_conv:
-        profile = await User.get_or_none(user_id=message.reply_message.from_id, peer_id=message.peer_id)
-        if profile == None:
-            await User(user_id=message.from_id, peer_id=message.peer_id).save()
-            profile = await User.get(user_id=message.from_id, peer_id=message.peer_id)
+        profile = (await check_in_db_and_add_if_not_exist(message.reply_message.from_id, message.peer_id))[0]
 
     elif message.reply_message and message.from_id not in admins_in_conv:
+        await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
         await message("Доступ запрещен!")
         await Tortoise.close_connections()
         return 
     else:
-        profile = await User.get_or_none(user_id=message.from_id, peer_id=message.peer_id)
-        if profile == None:
-            await User(user_id=message.from_id, peer_id=message.peer_id).save()
-            profile = await User.get(user_id=message.from_id, peer_id=message.peer_id)
+        profile = (await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id))[0]
+        
+    global_user = await GlobalUser.get_or_none(user_id=message.from_id)
+    global_role = await GlobalRole.get(global_userss=global_user.id)
     
-    await message("Ваш ID пользователя: {0}\nКоличество предупреждений: {1}".format(profile.user_id, profile.warns))
+    await message("Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}".format(profile.user_id, global_role, profile.warns))
     await Tortoise.close_connections()
 
 @bot.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower="True")
@@ -111,19 +136,21 @@ async def warn_with_mention_message(message : Message, mention : str, count : st
     if (not count.isdigit()) and not (count.startswith('-') and count[1:].isdigit()):
         await message("Текст вместо цифры?.. М-да...")
     else:
+        await init()
         count = int(count)
         if count > 4:
+            await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
             await message("Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч")
         else:
-            await init()
             user_in_db = await User.get_or_none(user_id=mention, peer_id=message.peer_id)
             if user_in_db == None and count < 0:
-                await User(user_id=mention, peer_id=message.peer_id, warns=0).save()
+                await check_in_db_and_add_if_not_exist(mention, message.peer_id)
                 await message("Ну нет у этого юзера предов. Ну не могу я забрать то, чего НЕТУ!!")
             elif user_in_db == None and count > 0:
-                await User(user_id=mention, warns=count, peer_id=message.peer_id).save()
+                await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id, count)
                 await message(f"Предупреждение выдано пользователю с ID {mention}, общее количество: {count}")
             elif user_in_db != None:
+                await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
                 current_warns = user_in_db.warns
                 if current_warns + count < 0:
                     await message(f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 варнов, что невозможно! Общее количество предов: {current_warns}")
@@ -136,8 +163,10 @@ async def warn_with_mention_message(message : Message, mention : str, count : st
             await Tortoise.close_connections()
 
 @bot.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower="True")
-async def warn_with_reply_message(message : Message, count : int):
+async def warn_with_reply_message(message : Message, count : str):
     if message.reply_message:
+        await init()
+        await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
         if (not count.isdigit()) and not (count.startswith('-') and count[1:].isdigit()):
             await message("Текст вместо цифры?.. М-да...")
         else:
@@ -145,16 +174,15 @@ async def warn_with_reply_message(message : Message, count : int):
             if count > 4:
                 await message("Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч")
             else:
-                await init()
                 user_in_db = await User.get_or_none(user_id=message.reply_message.from_id, peer_id=message.peer_id)
-
                 if user_in_db == None and count < 0:
-                    await User(user_id=mention, peer_id=message.peer_id, warns=0).save()
+                    await check_in_db_and_add_if_not_exist(mention, message.peer_id)
                     await message("Ну нет у этого юзера предов. Ну не могу я забрать то, чего НЕТУ!!")
                 elif user_in_db == None and count > 0:
-                    insert_user = await User(user_id=message.reply_message.from_id, warns=count, peer_id=message.peer_id).save()
+                    await check_in_db_and_add_if_not_exist(message.reply_message.from_id, message.peer_id, count)
                     await message(f"Предупреждение выдано пользователю с ID {message.reply_message.from_id}, общее количество: {count}")
                 elif user_in_db != None:
+                    await check_in_db_and_add_if_not_exist(message.reply_message.from_id, message.peer_id)
                     current_warns = user_in_db.warns
                     if current_warns + count < 0:
                         await message(f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 варнов, что невозможно! Общее количество предов: {current_warns}")
@@ -174,7 +202,7 @@ async def watch_all_warns(message : Message):
     if not message.reply_message:
         await init()
         user_in_db = await User.get_or_none(user_id=message.from_id, peer_id=message.peer_id)
-
+        await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
         if user_in_db == None or user_in_db.count == 0:
             if user_in_db == None:
                 user_in_db = await User(user_id=message.reply_message.from_id, peer_id=message.peer_id).save()
@@ -187,9 +215,13 @@ async def watch_all_warns(message : Message):
 
 
     if message.from_id not in admins_in_conv and message.reply_message.from_id != message.from_id:
+        await init()
+        await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
         await message("Тебе доступ сюда запрещен, понимаешь? Надеюсь, да. **Тихо* Опять эти дауны меня не по назначению юзают* :(\nКоманда предлагается к удалению!")
     else:
         await init()
+        await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
+        await check_in_db_and_add_if_not_exist(message.reply_message.from_id, message.peer_id)
         user_in_db = await User.get_or_none(user_id=message.reply_message.from_id, peer_id=message.peer_id)
         if user_in_db != None and user_in_db.warns != 0:
             await message(f"Количество предупреждений у пользователя с ID {message.reply_message.from_id}: {user_in_db.warns}\nКоманда предлагается к удалению!")
@@ -201,6 +233,7 @@ async def watch_all_warns(message : Message):
 
 @bot.on.message_handler(AccessForAllRule(), text="/помощь", lower=True)
 async def help_message(message : Message):
+    await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
     await user.api.request('messages.send', 
                             { 'message': "Привет - и тебе привет!\nМаксим - он тут админ\n/пред - (только для администраторов!) выдать пред. Надо переслать сообщение юзера, которому надо дать пред\n/всепреды - посмотреть все преды. Администраторам доступен просмотр предов всех юзеров, обычным юзерам - только своих. Надо переслать сообщение, преды чьего юзера просмотреть\n/voteban с пересланным сообщением - открыть голосование за бан участника\n/инфодоступ - разрешен ли доступ к написанию сообщений в данный момент\n/профиль - посмотреть свой профиль",  
                             'group_id': bot.group_id,
@@ -210,7 +243,10 @@ async def help_message(message : Message):
 
 @bot.on.message_handler(AccessForAllRule(), text="/voteban", lower=True)
 async def voteban_message(message : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
     if message.reply_message:
+        await check_in_db_and_add_if_not_exist(message.reply_message.from_id, message.peer_id)
         if message.reply_message.from_id == message.from_id or message.reply_message.from_id in admins_in_conv or message.reply_message.from_id == -bot.group_id:
             await message("Просто попроси бана себе, а")
 
@@ -227,7 +263,7 @@ async def voteban_message(message : Message):
     else:
         await message("Перешли сообщение человека, за которого начать голосование за бан!")
 
-@bot.on.message_handler(OnlyAdminAccess(), text="/доступ", lower=True)
+@bot.on.message_handler(OnlyBotModerAccess(), text="/доступ", lower=True)
 async def access_message(message : Message):
     global access_for_all
     access_for_all = not access_for_all
@@ -241,12 +277,16 @@ async def access_message(message : Message):
 
 @bot.on.message_handler(text="/инфодоступ", lower=True)
 async def check_access_message(message : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
     global access_for_all
     access = "разрешён" if access_for_all else "запрещён"
     await message(f"Доступ к написанию сообщений {access}")
 
 @bot.on.message_handler(OnlyAdminAccess(), AccessForBotAdmin(), text="бан", lower=True)
 async def bot_ban_message(message : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
     if message.reply_message:
         await message(f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {message.reply_message.from_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ!")
         await bot.branch.add(message.peer_id, "bot_ban_branch", user_id=message.reply_message.from_id, admin_id=message.from_id)
@@ -270,7 +310,7 @@ async def bot_ban_branch(message : Message, user_id, admin_id):
     if message.from_id == admin_id and not returning:
         await message(f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {user_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ!")
 
-@bot.on.message_handler(OnlyMaximSend(), text="/разослать <text>", lower=True)
+@bot.on.message_handler(OnlyBotAdminAccess(), text="/разослать <text>", lower=True)
 async def send_messages(message : Message, text : str):
     await init()
     await bot.api.request('messages.markAsRead', {
@@ -281,14 +321,33 @@ async def send_messages(message : Message, text : str):
     if convs:
         for conv in convs:
             await bot.api.messages.send(peer_id=conv, random_id=random.randint(1, 1000000), message=text)
+
+    await message("Выполнено.")
     await Tortoise.close_connections()
 
-@bot.on.message_handler(OnlyMaximSend(), text="/mention <mention>", lower=True)
+@bot.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
 async def mention_test(message : Message, mention : str):
     print(mention.split('|')[0][1:])
     await message("[id{0}|Maxim]".format(message.from_id))
 
-@bot.on.message_handler(OnlyMaximSend(), text="~ <text>", lower=True)
+@bot.on.message_handler(AccessForAllRule(), text="/регистрация", lower=True)
+async def registr_message(message : Message):
+    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
+    global_profile = await GlobalUser.get_or_none(user_id=user_id)
+    if profile != None:
+        await message("Локальный профиль обнаружен")
+    else:
+        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
+        await message("Ваш локальный профиль успешно зарегистрирован")
+
+    if global_profile != None:
+        await message("Глобальный профиль обнаружен")
+    else:
+        default_role = await GlobalRole.get(name="Default")
+        await GlobalUser(user_id=user_id, global_role=default_role).save()
+        await message("Глобальный профиль успешно зарегистрирован")
+
+@bot.on.message_handler(OnlyBotModerAccess(), text="~ <text>", lower=True)
 async def print_or_count(message : Message, text : str):
     try:
         query = ' '.join([a for a in ''.join(text.split())]).split()
@@ -314,6 +373,8 @@ async def print_or_count(message : Message, text : str):
 
 @bot.on.message_handler(AttachmentRule("audio_message"))
 async def on_voice_message(message : Message):
+    await init()
+    await check_in_db_and_add_if_not_exist(message.from_id, message.peer_id)
     attachments = message.attachments
 
     for attachment in attachments:
@@ -353,5 +414,5 @@ async def on_voice_message(message : Message):
         os.remove(f"{message.from_id}.ogg")
         os.remove(f"{message.from_id}.wav")
     
-
+logger.info("BOT IS READY TO START")
 bot.run_polling(skip_updates=False)
