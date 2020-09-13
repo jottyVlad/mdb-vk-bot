@@ -22,7 +22,7 @@ import jinja2
 from pathlib import Path
 from math import *
 
-bot = Bot(ACCESS_TOKEN)
+bot = Bot(ACCESS_TOKEN, loop=asyncio.get_event_loop(), group_id=196816306)
 user = vkBottleUser(USER_ACCESS_TOKEN)
 
 index_dir = str(Path(__file__).resolve().parent)+'/index_page'
@@ -75,6 +75,14 @@ async def hello(request):
 @routes.get("/when_update")
 @aiohttp_jinja2.template('whenupdate.html')
 async def whenupdate(request):
+    """
+        WHENUPDATE SITE RESPONSE
+    """
+    return {}
+
+@routes.get("/changelog")
+@aiohttp_jinja2.template('changelog.html')
+async def changelog(request):
     """
         WHENUPDATE SITE RESPONSE
     """
