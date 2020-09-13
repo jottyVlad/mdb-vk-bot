@@ -5,6 +5,8 @@ class User(Model):
     id = fields.IntField(pk=True)
     user_id = fields.IntField()
     peer_id = fields.IntField()
+    coins = fields.IntField(default=100)
+    energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)
 
     class Meta:
