@@ -7,6 +7,7 @@ from models import Conversation, User, GlobalUser, GlobalRole
 from rules import *
 from math import *
 import random
+import ujson
 
 bp = Blueprint(name="Working with global admin functions")
 
@@ -142,8 +143,7 @@ async def test_message(ans: Message):
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/доступ", lower=True)
 async def access_message(message: Message):
-    global access_for_all
-    access_for_all = not access_for_all
+    access_for_all = not global_settings.access_for_all
     with open("settings.json", "w") as write_file:
         ujson.dump({"access": access_for_all}, write_file)
 

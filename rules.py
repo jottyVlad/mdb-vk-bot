@@ -1,20 +1,14 @@
 from vkbottle.rule import AbstractMessageRule
 from vkbottle import Message
-import ujson
 from models import GlobalRole, GlobalUser
 import asyncio
 from config import ACCESS_TOKEN
 from vkbottle import Bot
+from global_settings import get_access_for_all
 
 bot = Bot(ACCESS_TOKEN)
 
 admins_in_conv = [444944367, 10885998, 26211044, 500101793]
-
-async def get_access_for_all() -> bool:
-    with open('settings.json', 'r') as read_file:
-        data = ujson.load(read_file)
-        access_for_all = data['access']
-        return access_for_all
 
 class AccessForAllRule(AbstractMessageRule):
     async def check(self, message : Message) -> bool:

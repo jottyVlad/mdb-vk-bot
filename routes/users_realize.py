@@ -164,8 +164,7 @@ async def voteban_message(message: Message):
 @bp.on.message_handler(text="/инфодоступ", lower=True)
 async def check_access_message(message: Message):
     await check_or_create(message.from_id, message.peer_id)
-    global access_for_all
-    access = "разрешён" if access_for_all else "запрещён"
+    access = "разрешён" if global_settings.access_for_all else "запрещён"
     await message(f"Доступ к написанию сообщений {access}")
 
 @bp.on.message_handler(AccessForAllRule(), text="/регистрация", lower=True)

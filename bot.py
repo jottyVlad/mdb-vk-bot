@@ -1,6 +1,5 @@
 from aiohttp import web
 from config import SECRET
-import ujson
 from tortoise import Tortoise, run_async
 import aiohttp_jinja2
 import jinja2
@@ -21,10 +20,6 @@ async def init():
 
 BOT.loop.run_until_complete(init())
 BOT.set_blueprints(actions.bp, admin_realize.bp, global_admin_realize.bp, users_realize.bp)
-
-with open("settings.json", "r") as read_file:
-    data = ujson.load(read_file)
-    access_for_all = data["access"]
 
 app = web.Application()
 routes = web.RouteTableDef()

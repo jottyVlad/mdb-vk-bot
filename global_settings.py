@@ -3,6 +3,7 @@ from config import ACCESS_TOKEN, USER_ACCESS_TOKEN
 from models import *
 import typing
 import asyncio
+import ujson
 
 BOT = Bot(ACCESS_TOKEN, loop=asyncio.get_event_loop(), group_id=196816306)
 USER = vkBottleUser(USER_ACCESS_TOKEN)
@@ -43,3 +44,12 @@ async def check_or_create(
         global_profile = GlobalUser.get(user_id=user_id)
 
     return (profile, global_profile)
+
+async def get_access_for_all() -> bool:
+    async with open("settings.json", "r") as read_file:
+        data = ujson.load(read_file)
+        access_for_all = data["access"]
+    
+    return access_for_all
+
+access_for_all = asyncio.get_event_loop().run_until_complete(get_access_data())
