@@ -46,10 +46,10 @@ async def check_or_create(
     return (profile, global_profile)
 
 async def get_access_for_all() -> bool:
-    async with open("settings.json", "r") as read_file:
+    with open("settings.json", "r") as read_file:
         data = ujson.load(read_file)
         access_for_all = data["access"]
     
     return access_for_all
 
-access_for_all = asyncio.get_event_loop().run_until_complete(get_access_data())
+access_for_all = asyncio.get_event_loop().run_until_complete(get_access_for_all())
