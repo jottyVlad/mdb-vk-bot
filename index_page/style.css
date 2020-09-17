@@ -102,7 +102,7 @@ body {
 	display: -o-flex;
 	display: flex;
 	justify-content: space-between;
-	max-width: 100%;
+	width: 100%;
 	margin: 0 auto;
 }
 
