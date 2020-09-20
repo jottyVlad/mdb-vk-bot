@@ -16,3 +16,4 @@ mdbbot_database.sqlite3-wal
 pyvenv.cfg
 users.csv
 backup
+aerich.ini

@@ -53,3 +53,4 @@ async def get_access_for_all() -> bool:
     return access_for_all
 
 access_for_all = asyncio.get_event_loop().run_until_complete(get_access_for_all())
+

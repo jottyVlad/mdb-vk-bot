@@ -5,6 +5,7 @@ import aiohttp_jinja2
 import jinja2
 from pathlib import Path
 from global_settings import *
+from tortoise_cfg import TORTOISE_ORM
 from routes import actions, admin_realize, global_admin_realize, users_realize
 
 index_dir = str(Path(__file__).resolve().parent)+'/index_page'
@@ -13,9 +14,7 @@ async def init():
     """
         INIT SQLITE3 DATABASE
     """
-    await Tortoise.init(
-        db_url="sqlite://mdbbot_database.sqlite3", modules={"models": ["models"]}
-    )
+    await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
 BOT.loop.run_until_complete(init())

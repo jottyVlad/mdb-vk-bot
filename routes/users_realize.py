@@ -64,8 +64,8 @@ async def profile_message(message: Message):
     global_role = await GlobalRole.get(global_userss=global_user.id)
 
     await message(
-        "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nЭнергия: {4}/5".format(
-            profile.user_id, global_role, profile.warns, profile.coins, profile.energy
+            "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nЭнергия: {4}/5\nРабота: {5}".format(
+            profile.user_id, global_role, profile.warns, profile.coins, profile.energy, (await profile.work_id)
         )
     )
 

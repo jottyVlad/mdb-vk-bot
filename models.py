@@ -8,7 +8,8 @@ class User(Model):
     coins = fields.IntField(default=100)
     energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)
-
+    work_id = fields.ForeignKeyField('models.Work', related_name="work_id", null=True)
+    job_lp = fields.CharField(max_length=128, null=True)
     class Meta:
         table = 'users'
 
@@ -45,3 +46,11 @@ class GlobalRole(Model):
     
     def __str__(self):
         return str(self.name)
+
+class Work(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=256)
+    salary = fields.IntField()
+
+    class Meta:
+        table = 'works'
