@@ -9,7 +9,8 @@ class User(Model):
     energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)
     work_id = fields.ForeignKeyField('models.Work', related_name="work_id", null=True)
-    job_lp = fields.CharField(max_length=128, null=True)
+    job_lp = fields.DatetimeField(null=True)
+
     class Meta:
         table = 'users'
 
@@ -54,3 +55,6 @@ class Work(Model):
 
     class Meta:
         table = 'works'
+
+    def __str__(self):
+        return str(self.name)

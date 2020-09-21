@@ -3,7 +3,7 @@ sys.path.append('..')
 
 from vkbottle.bot import Blueprint
 from global_settings import *
-from models import Conversation, User, GlobalUser, GlobalRole
+from models import Conversation, User, GlobalUser, GlobalRole, Work
 from rules import *
 from math import *
 import random
@@ -132,6 +132,8 @@ async def add_to_db(message: Message, model: str, value: str):
         returnable = await User(**value).save()
     elif model == "Conversation":
         returnable = await Conversation(**value).save()
+    elif model == "Work":
+        returnable = await Work(**value).save()
 
     await message(str(returnable))
 

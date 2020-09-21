@@ -6,7 +6,7 @@ import jinja2
 from pathlib import Path
 from global_settings import *
 from tortoise_cfg import TORTOISE_ORM
-from routes import actions, admin_realize, global_admin_realize, users_realize
+from routes import actions, admin_realize, global_admin_realize, users_realize, economic_realize
 
 index_dir = str(Path(__file__).resolve().parent)+'/index_page'
 
@@ -18,7 +18,10 @@ async def init():
     await Tortoise.generate_schemas()
 
 BOT.loop.run_until_complete(init())
-BOT.set_blueprints(actions.bp, admin_realize.bp, global_admin_realize.bp, users_realize.bp)
+BOT.set_blueprints(actions.bp, admin_realize.bp, global_admin_realize.bp, users_realize.bp, economic_realize.bp)
+
+thread = economic_realize.PayoutsThread()
+thread.start()
 
 app = web.Application()
 routes = web.RouteTableDef()
