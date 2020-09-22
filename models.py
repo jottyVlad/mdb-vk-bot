@@ -59,3 +59,16 @@ class Work(Model):
 
     def __str__(self):
         return str(self.name)
+
+class Car(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=256)
+    multiplier = fields.FloatField()
+    cost = fields.IntField()
+
+    class Meta:
+        table = 'cars'
+
+    def __str__(self):
+        return str(self.name)
+
