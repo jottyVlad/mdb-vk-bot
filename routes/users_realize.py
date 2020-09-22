@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 from vkbottle.bot import Blueprint
+from vkbottle.ext import Middleware
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole
 from rules import *
@@ -64,8 +65,8 @@ async def profile_message(message: Message):
     global_role = await GlobalRole.get(global_userss=global_user.id)
 
     await message(
-            "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nЭнергия: {4}/5\nРабота: {5}".format(
-            profile.user_id, global_role, profile.warns, profile.coins, profile.energy, (await profile.work_id)
+            "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}".format(
+            profile.user_id, global_role, profile.warns, profile.coins, profile.exp, profile.energy, (await profile.work_id)
         )
     )
 
@@ -190,3 +191,14 @@ async def get_contacts(message: Message):
     name = (await BOT.api.users.get(message.from_id))[0].first_name
     await message("[id{0}|{1}], список контактов с разработчиком:\nVK: vk.com/jottyfounder\nMail: vladislavbusiness@jottymdbbot.xyz\nПредложения по боту писать на почту."\
     .format(message.from_id, name))
+
+@bp.middleware.middleware_handler()
+class ExpMiddleware(Middleware):
+    async def pre(self, message: Message, *args):
+        if not message.text.startswith('/'):
+            await check_or_create(message.from_id, message.peer_id)
+            msg = [a for a in message.text]
+            msg = [a for a in msg if a != ' ']
+            exps = 0.02 * len(msg)
+            user = await User.get(user_id = message.from_id, peer_id = message.peer_id)
+            updated = await User.get(user_id=message.from_id, peer_id=message.peer_id).update(exp=exps+user.exp)

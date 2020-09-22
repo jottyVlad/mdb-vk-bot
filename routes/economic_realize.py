@@ -37,11 +37,15 @@ class PayoutsThread(Thread):
             except:
                 continue
 
-@bp.on.message_handler(OnlyMaximSend(), text="/дать_работу")
-async def give_job(message: Message):
-    work = await Work.get(id=0)
-    user = await User.get(user_id=message.from_id, peer_id=message.peer_id).update(work_id=work, job_lp=datetime.datetime.now())
-    await message("Работа выдана!")
+@bp.on.message_handler(OnlyMaximSend(), text="/дать_работу <j_id>")
+async def give_job(message: Message, j_id: str):
+    if j_id.isdigit(): 
+        j_id = int(j_id)
+        work = await Work.get(id=j_id)
+        user = await User.get(user_id=message.from_id, peer_id=message.peer_id).update(work_id=work, job_lp=datetime.datetime.now())
+        await message("Работа выдана!")
+    else:
+        await message("Введите число!")
 
 @bp.on.message_handler(text="/список_работ")
 async def job_list(message: Message):
