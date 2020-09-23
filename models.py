@@ -72,6 +72,7 @@ class Car(Model):
     name = fields.CharField(max_length=256)
     multiplier = fields.IntField()
     cost = fields.IntField()
+    exp_need = fields.IntField()
 
     class Meta:
         table = "cars"

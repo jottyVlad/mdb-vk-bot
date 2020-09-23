@@ -230,13 +230,15 @@ async def buy_car(message: Message, c_id):
         user = (await check_or_create(message.from_id, message.peer_id))[0]
         car = await Car.get(id=c_id)
 
-        if (user.coins) >= (car.cost) and user.car_id is None:
+        if (user.coins) >= (car.cost) and user.exp >= car.exp_need  and user.car_id is None:
             await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
                 coins=user.coins - car.cost, car=car
             )
             await message(f"Машина {car} куплена!")
         elif user.coins < car.cost:
             await message("У тебя недостаточно денег!")
+        elif user.exp < car.exp_need:
+            await message("У тебя недостаточно опыта!")
         else:
             await message("У тебя уже есть машина!")
     else:
