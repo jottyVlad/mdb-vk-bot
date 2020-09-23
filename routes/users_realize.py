@@ -1,14 +1,15 @@
 import sys
-
-sys.path.append("..")
+import random
 
 from vkbottle.bot import Blueprint
 from vkbottle.ext import Middleware
+
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole
 from rules import *
-import random
 
+
+sys.path.append("..")
 bp = Blueprint(name="Working with users functions")
 
 
@@ -70,11 +71,11 @@ async def profile_message(message: Message):
     global_role = await GlobalRole.get(global_userss=global_user.id)
 
     car = "None"
-    if profile.car_id != None:
+    if not profile.car_id is None:
         car = (await Car.get(id=profile.car_id)).name
 
     job = "None"
-    if profile.work_id_id != None:
+    if not profile.work_id_id is None:
         job = (await Work.get(id=profile.work_id_id)).name
 
     await message(
@@ -98,8 +99,8 @@ async def watch_all_warns(message: Message):
             user_id=message.from_id, peer_id=message.peer_id
         )
         await check_or_create(message.from_id, message.peer_id)
-        if user_in_db == None or user_in_db.count == 0:
-            if user_in_db == None:
+        if user_in_db is None or user_in_db.count == 0:
+            if user_in_db is None:
                 user_in_db = await User(
                     user_id=message.reply_message.from_id, peer_id=message.peer_id
                 ).save()
@@ -126,12 +127,12 @@ async def watch_all_warns(message: Message):
         user_in_db = await User.get_or_none(
             user_id=message.reply_message.from_id, peer_id=message.peer_id
         )
-        if user_in_db != None and user_in_db.warns != 0:
+        if not user_in_db is None and user_in_db.warns != 0:
             await message(
                 f"Количество предупреждений у пользователя с ID {message.reply_message.from_id}: {user_in_db.warns}\nКоманда предлагается к удалению!"
             )
         else:
-            if user_in_db == None:
+            if user_in_db is None:
                 user_in_db = await User(
                     user_id=message.reply_message.from_id, peer_id=message.peer_id
                 ).save()
@@ -197,13 +198,13 @@ async def check_access_message(message: Message):
 async def registr_message(message: Message):
     profile = await User.get_or_none(user_id=message.from_id, peer_id=message.peer_id)
     global_profile = await GlobalUser.get_or_none(user_id=message.from_id)
-    if profile != None:
+    if not profile is None:
         await message("Локальный профиль обнаружен")
     else:
         await User(user_id=message.from_id, peer_id=message.peer_id, warns=0).save()
         await message("Ваш локальный профиль успешно зарегистрирован")
 
-    if global_profile != None:
+    if not global_profile is None:
         await message("Глобальный профиль обнаружен")
     else:
         default_role = await GlobalRole.get(name="Default")
@@ -229,7 +230,7 @@ async def buy_car(message: Message, c_id):
         user = (await check_or_create(message.from_id, message.peer_id))[0]
         car = await Car.get(id=c_id)
 
-        if (user.coins) >= (car.cost) and user.car_id == None:
+        if (user.coins) >= (car.cost) and user.car_id is None:
             await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
                 coins=user.coins - car.cost, car=car
             )
@@ -245,7 +246,7 @@ async def buy_car(message: Message, c_id):
 @bp.on.message_handler(AccessForAllRule(), text="/продать_машину")
 async def sell_car(message: Message):
     user = (await check_or_create(message.from_id, message.peer_id))[0]
-    if user.car_id != None:
+    if not user.car_id is None:
         car_cost = (await Car.get(id=user.car_id)).cost
         car_cost = car_cost - (car_cost * 0.1)
         await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
@@ -262,7 +263,7 @@ class ExpMiddleware(Middleware):
         if not message.text.startswith("/"):
             await check_or_create(message.from_id, message.peer_id)
             user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
-            if user.car_id != None:
+            if not user.car_id is None:
                 multiplier = (await Car.get(id=user.car_id)).multiplier
             else:
                 multiplier = 1

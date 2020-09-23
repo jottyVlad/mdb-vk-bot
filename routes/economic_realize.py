@@ -1,15 +1,17 @@
 import sys
-
-sys.path.append("..")
-
 import asyncio
+import datetime
+from threading import Thread
+
+from tortoise import Tortoise
+from vkbottle.bot import Blueprint
+
+from rules import *
 from models import User, Work
 from global_settings import *
-from tortoise import Tortoise
-import datetime
-from vkbottle.bot import Blueprint
-from threading import Thread
-from rules import *
+
+
+sys.path.append("..")
 
 bp = Blueprint(name="Working with economic system")
 
