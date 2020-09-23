@@ -8,6 +8,7 @@ from rules import *
 from math import *
 import random
 import ujson
+from tortoise import Tortoise
 
 bp = Blueprint(name="Working with global admin functions")
 
@@ -26,6 +27,11 @@ async def send_messages(message: Message, text: str):
 
     await message("Выполнено.")
 
+@bp.on.message_handler(OnlyMaximSend(), text="/получить_себя")
+async def get_myself(message: Message):
+    conn = Tortoise.get_connection("default")
+    dct = await conn.execute_query_dict("SELECT * FROM `users` WHERE `user_id` = 500101793")
+    await message(dct)
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
 async def mention_test(message: Message, mention: str):
@@ -134,8 +140,31 @@ async def add_to_db(message: Message, model: str, value: str):
         returnable = await Conversation(**value).save()
     elif model == "Work":
         returnable = await Work(**value).save()
+    elif model == "Car":
+        returnable = await Car(**value).save()
 
     await message(str(returnable))
+
+@bp.on.message_handler(OnlyMaximSend(), text="/бд удалить <model> <value>")
+async def delete_from_db(message: Message, model: str, value: str):
+    try:
+        value = eval(value)
+        if model == "GlobalRole":
+            returnable = await GlobalRole.get(name=value['name']).delete()
+        elif model == "GlobalUser":
+            returnable = await GlobalUser.get(user_id=value['user_id'], global_role=value['global_role']).delete()
+        elif model == "User":
+            returnable = await User.get(**value).delete()
+        elif model == "Conversation":
+            returnable = await Conversation.get(**value).delete()
+        elif model == "Work":
+            returnable = await Work.get(**value).delete()
+        elif model == "Car":
+            returnable = await Car.get(**value).delete()
+
+        await message("Удалено!")
+    except:
+        await message("Оошибка удаления!")
 
 @bp.on.message_handler(
     OnlyAdminAccess(), OnlyBotAdminAccess(), text="тест", lower=True

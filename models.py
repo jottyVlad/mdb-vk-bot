@@ -8,9 +8,10 @@ class User(Model):
     coins = fields.IntField(default=100)
     energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)
-    exp = fields.FloatField(default=0)
+    exp = fields.IntField(default=0)
     work_id = fields.ForeignKeyField('models.Work', related_name="work_id", null=True)
-    job_lp = fields.DatetimeField(null=True)
+    job_lp = fields.BigIntField(null=True)
+    car = fields.ForeignKeyField('models.Car', related_name="car", null=True)
 
     class Meta:
         table = 'users'
@@ -63,7 +64,7 @@ class Work(Model):
 class Car(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=256)
-    multiplier = fields.FloatField()
+    multiplier = fields.IntField()
     cost = fields.IntField()
 
     class Meta:
