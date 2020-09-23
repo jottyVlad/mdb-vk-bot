@@ -1,5 +1,6 @@
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 from vkbottle.bot import Blueprint
 from vkbottle.ext import Middleware
@@ -10,9 +11,8 @@ import random
 
 bp = Blueprint(name="Working with users functions")
 
-@bp.on.message_handler(
-    AccessForAllRule(), text="привет", lower=True
-)
+
+@bp.on.message_handler(AccessForAllRule(), text="привет", lower=True)
 async def hi_message(ans: Message):
     await check_or_create(ans.from_id, ans.peer_id)
     print(ans.peer_id)
@@ -33,6 +33,7 @@ async def maxim_message(ans: Message):
         },
     )
 
+
 @bp.on.message_handler(AccessForAllRule(), text="мда", lower=True)
 async def mda_message(ans: Message):
     await check_or_create(ans.from_id, ans.peer_id)
@@ -47,9 +48,13 @@ async def mda_message(ans: Message):
         },
     )
 
+
 @bp.on.message_handler(AccessForAllRule(), text=["/профиль", "/profile"], lower=True)
 async def profile_message(message: Message):
-    if message.reply_message and ((message.from_id in admins_in_conv) or message.reply_message.from_id == message.from_id):
+    if message.reply_message and (
+        (message.from_id in admins_in_conv)
+        or message.reply_message.from_id == message.from_id
+    ):
         profile = (
             await check_or_create(message.reply_message.from_id, message.peer_id)
         )[0]
@@ -66,17 +71,25 @@ async def profile_message(message: Message):
 
     car = "None"
     if profile.car_id != None:
-        car = (await Car.get(id = profile.car_id)).name
+        car = (await Car.get(id=profile.car_id)).name
 
     job = "None"
     if profile.work_id_id != None:
         job = (await Work.get(id=profile.work_id_id)).name
 
     await message(
-            "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}\nМашина: {7}".format(
-            profile.user_id, global_role, profile.warns, profile.coins, profile.exp, profile.energy, job, car
+        "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}\nМашина: {7}".format(
+            profile.user_id,
+            global_role,
+            profile.warns,
+            profile.coins,
+            profile.exp,
+            profile.energy,
+            job,
+            car,
         )
     )
+
 
 @bp.on.chat_message(AccessForAllRule(), text="/всепреды", lower=True)
 async def watch_all_warns(message: Message):
@@ -126,6 +139,7 @@ async def watch_all_warns(message: Message):
                 f"У пользователя с ID {message.reply_message.from_id} отсутствуют предупреждения!\nКоманда предлагается к удалению!"
             )
 
+
 @bp.on.message_handler(AccessForAllRule(), text="/помощь", lower=True)
 async def help_message(message: Message):
     await check_or_create(message.from_id, message.peer_id)
@@ -139,6 +153,7 @@ async def help_message(message: Message):
             "random_id": random.randint(1, 1000000000000000),
         },
     )
+
 
 @bp.on.message_handler(AccessForAllRule(), text="/voteban", lower=True)
 async def voteban_message(message: Message):
@@ -170,11 +185,13 @@ async def voteban_message(message: Message):
             "Перешли сообщение человека, за которого начать голосование за бан!"
         )
 
+
 @bp.on.message_handler(text="/инфодоступ", lower=True)
 async def check_access_message(message: Message):
     await check_or_create(message.from_id, message.peer_id)
     access = "разрешён" if access_for_all else "запрещён"
     await message(f"Доступ к написанию сообщений {access}")
+
 
 @bp.on.message_handler(AccessForAllRule(), text="/регистрация", lower=True)
 async def registr_message(message: Message):
@@ -193,24 +210,29 @@ async def registr_message(message: Message):
         await GlobalUser(user_id=message.from_id, global_role=default_role).save()
         await message("Глобальный профиль успешно зарегистрирован")
 
+
 @bp.on.message_handler(AccessForAllRule(), text="/контакты", lower=True)
 async def get_contacts(message: Message):
     await check_or_create(message.from_id, message.peer_id)
     name = (await BOT.api.users.get(message.from_id))[0].first_name
-    await message("[id{0}|{1}], список контактов с разработчиком:\nVK: vk.com/jottyfounder\nMail: vladislavbusiness@jottymdbbot.xyz\nПредложения по боту писать на почту."\
-    .format(message.from_id, name))
+    await message(
+        "[id{0}|{1}], список контактов с разработчиком:\nVK: vk.com/jottyfounder\nMail: vladislavbusiness@jottymdbbot.xyz\nПредложения по боту писать на почту.".format(
+            message.from_id, name
+        )
+    )
+
 
 @bp.on.message_handler(AccessForAllRule(), text="/купить_машину <c_id>")
 async def buy_car(message: Message, c_id):
     if c_id.isdigit():
         c_id = int(c_id)
-        user = (
-                await check_or_create(message.from_id, message.peer_id)
-            )[0]
-        car = await Car.get(id = c_id)
+        user = (await check_or_create(message.from_id, message.peer_id))[0]
+        car = await Car.get(id=c_id)
 
         if (user.coins) >= (car.cost) and user.car_id == None:
-            await User.get(user_id=message.from_id, peer_id=message.peer_id).update(coins = user.coins-car.cost, car=car)
+            await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+                coins=user.coins - car.cost, car=car
+            )
             await message(f"Машина {car} куплена!")
         elif user.coins < car.cost:
             await message("У тебя недостаточно денег!")
@@ -219,30 +241,34 @@ async def buy_car(message: Message, c_id):
     else:
         await message("Введите цифру-ID машины!")
 
+
 @bp.on.message_handler(AccessForAllRule(), text="/продать_машину")
 async def sell_car(message: Message):
-    user = (
-            await check_or_create(message.from_id, message.peer_id)
-            )[0]
+    user = (await check_or_create(message.from_id, message.peer_id))[0]
     if user.car_id != None:
         car_cost = (await Car.get(id=user.car_id)).cost
         car_cost = car_cost - (car_cost * 0.1)
-        await User.get(user_id = message.from_id, peer_id = message.peer_id).update(coins = user.coins+car_cost, car_id = None)
+        await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+            coins=user.coins + car_cost, car_id=None
+        )
         await message("Машина продана!")
     else:
         await message("У вас нет машины!")
 
+
 @bp.middleware.middleware_handler()
 class ExpMiddleware(Middleware):
     async def pre(self, message: Message, *args):
-        if not message.text.startswith('/'):
+        if not message.text.startswith("/"):
             await check_or_create(message.from_id, message.peer_id)
-            user = await User.get(user_id = message.from_id, peer_id = message.peer_id)
+            user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
             if user.car_id != None:
                 multiplier = (await Car.get(id=user.car_id)).multiplier
             else:
                 multiplier = 1
             msg = [a for a in message.text]
-            msg = [a for a in msg if a != ' ']
+            msg = [a for a in msg if a != " "]
             exps = 2 * len(msg) * multiplier
-            updated = await User.get(user_id=message.from_id, peer_id=message.peer_id).update(exp=exps+user.exp)
+            updated = await User.get(
+                user_id=message.from_id, peer_id=message.peer_id
+            ).update(exp=exps + user.exp)

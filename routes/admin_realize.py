@@ -1,5 +1,6 @@
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 from vkbottle.bot import Blueprint
 from global_settings import *
@@ -9,6 +10,7 @@ from vkbottle.branch import Branch, ExitBranch
 import random
 
 bp = Blueprint(name="Working with admin functions")
+
 
 @bp.on.message_handler(OnlyAdminAccess(), AccessForBotAdmin(), text="бан", lower=True)
 async def bot_ban_message(message: Message):
@@ -23,6 +25,7 @@ async def bot_ban_message(message: Message):
             user_id=message.reply_message.from_id,
             admin_id=message.from_id,
         )
+
 
 @bp.branch.simple_branch("bot_ban_branch")
 async def bot_ban_branch(message: Message, user_id, admin_id):
@@ -45,6 +48,7 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
         await message(
             f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {user_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ!"
         )
+
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower="True")
 async def warn_with_mention_message(message: Message, mention: str, count: str):
