@@ -10,6 +10,7 @@ from routes import actions, admin_realize, global_admin_realize, users_realize
 
 index_dir = str(Path(__file__).resolve().parent)+'/index_page'
 
+
 async def init():
     """
         INIT SQLITE3 DATABASE
@@ -25,7 +26,7 @@ routes = web.RouteTableDef()
 if not WEBHOOK_ACCEPT:
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(index_dir)))
     app.router.add_static('/static/',
-                          path=str('/botenv/index_page/'),
+                          path=str('./index_page/'),
                           name='static')
 
 
