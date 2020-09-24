@@ -281,7 +281,7 @@ async def sell_car(message: Message):
 @bp.middleware.middleware_handler()
 class ExpMiddleware(Middleware):
     async def pre(self, message: Message, *args):
-                          
+        user = (await check_or_create(message.from_id, message.peer_id))[0]                  
         if not message.text.startswith("/"):
             if not user.car_id is None:
                 multiplier = (await Car.get(id=user.car_id)).multiplier
