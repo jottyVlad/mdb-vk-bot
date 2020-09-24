@@ -61,3 +61,37 @@ async def get_access_for_all() -> bool:
 
 access_for_all = asyncio.get_event_loop().run_until_complete(get_access_for_all())
 
+async def make_profile_photo(user: User):
+    x, y = 30, 50
+    color = (0, 0, 0)
+    
+    global_user = await GlobalUser.get_or_none(user_id=user.user_id)
+    global_role = await GlobalRole.get(global_userss=global_user.id)
+    
+    img = Image.open('profile_photo.jpg')
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype('Tahoma.ttf', 30)
+    draw.text((x, y), f"Ваш ID: {user.user_id}", color, font=font)
+    y += 35
+    draw.text((x, y), f"Ваша роль: {global_role}", color, font=font)
+    y += 35
+    draw.text((x, y), f"Деньги: {user.coins}", color, font=font)
+    y += 35
+    draw.text((x, y), f"Энергия: {user.energy}", color, font=font)
+    y += 35
+    draw.text((x, y), f"EXP: {user.exp}", color, font=font)
+    y += 35
+    job = "безработный"
+    if user.work_id_id != None:
+        job = (await Work.get(id=user.work_id_id)).name
+
+    car = "отсутствует"
+    if user.car_id != None:
+        car = (await Car.get(id=user.car_id)).name
+    
+    draw.text((x, y), f"Работа: {job}", color, font=font)
+    y += 35
+    draw.text((x, y), f"Машина: {car}", color, font=font)
+    y += 35
+    draw.text((x, y), f"Количество предупреждений: {user.warns}", color, font=font)
+    img.save(f"{user.user_id}.jpeg")

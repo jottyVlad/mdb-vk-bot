@@ -17,11 +17,11 @@ class AccessForAllRule(AbstractMessageRule):
 
 class OnlyAdminAccess(AbstractMessageRule):
     async def check(self, message : Message) -> bool:
-        return True if message.from_id in admins_in_conv else False
+        return message.from_id in admins_in_conv
 
 class OnlyMaximSend(AbstractMessageRule):
     async def check(self, message : Message) -> bool:
-        return True if message.from_id == 500101793 else False
+        return message.from_id == 500101793
 
 class OnlyBotAdminAccess(AbstractMessageRule):
     async def check(self, message : Message) -> bool:

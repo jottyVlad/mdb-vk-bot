@@ -1,5 +1,6 @@
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 from vkbottle.bot import Blueprint
 from global_settings import *
@@ -8,6 +9,7 @@ from rules import *
 import random
 
 bp = Blueprint(name="Working with actions functions")
+
 
 @bp.on.chat_invite()
 async def invite_message(action: Message):
