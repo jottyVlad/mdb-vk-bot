@@ -1,5 +1,5 @@
 from aiohttp import web
-from config import SECRET
+from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
 from tortoise import Tortoise, run_async
 import aiohttp_jinja2
 import jinja2
@@ -22,10 +22,12 @@ BOT.set_blueprints(actions.bp, admin_realize.bp, global_admin_realize.bp, users_
 
 app = web.Application()
 routes = web.RouteTableDef()
-aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(index_dir)))
-app.router.add_static('/static/',
-                      path=str('/botenv/index_page/'),
-                      name='static')
+if not WEBHOOK_ACCEPT:
+    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(index_dir)))
+    app.router.add_static('/static/',
+                          path=str('/botenv/index_page/'),
+                          name='static')
+
 
 @routes.get("/")
 @aiohttp_jinja2.template('index.html')
@@ -35,6 +37,7 @@ async def hello(request):
     """
     return {}
 
+
 @routes.get("/when_update")
 @aiohttp_jinja2.template('whenupdate.html')
 async def whenupdate(request):
@@ -42,6 +45,7 @@ async def whenupdate(request):
         WHENUPDATE SITE RESPONSE
     """
     return {}
+
 
 @routes.get("/changelog")
 @aiohttp_jinja2.template('changelog.html')
@@ -51,14 +55,17 @@ async def changelog(request):
     """
     return {}
 
+
 @routes.post("/bot")
+@routes.get("/bot")
 async def bot_execute(request):
-    """
-        BOT REQUEST RESPONSE
-    """
-    event = await request.json()
-    emulation = await BOT.emulate(event, confirmation_token="e826056e", secret=SECRET)
-    return web.Response(text=emulation)
+    """Bot request response"""
+    if WEBHOOK_ACCEPT:
+        return web.Response(text=CONFIRMATION_TOKEN)
+    else:
+        event = await request.json()
+        emulation = await BOT.emulate(event, confirmation_token=CONFIRMATION_TOKEN, secret=SECRET)
+        return web.Response(text=emulation)
 
 app.add_routes(routes)
-web.run_app(app, host="0.0.0.0", port=80)
+web.run_app(app, host="127.0.0.1", port=8033)
