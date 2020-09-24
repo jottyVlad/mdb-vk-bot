@@ -1,17 +1,22 @@
 import sys
-sys.path.append('..')
+import random
+import os
 
 from vkbottle.bot import Blueprint
+from vkbottle.ext import Middleware
+import aiohttp
+import ujson
+
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole
 from rules import *
-import random
 
+
+sys.path.append("..")
 bp = Blueprint(name="Working with users functions")
 
-@bp.on.message_handler(
-    AccessForAllRule(), text="привет", lower=True
-)
+
+@bp.on.message_handler(AccessForAllRule(), text="привет", lower=True)
 async def hi_message(ans: Message):
     await check_or_create(ans.from_id, ans.peer_id)
     print(ans.peer_id)
@@ -32,6 +37,7 @@ async def maxim_message(ans: Message):
         },
     )
 
+
 @bp.on.message_handler(AccessForAllRule(), text="мда", lower=True)
 async def mda_message(ans: Message):
     await check_or_create(ans.from_id, ans.peer_id)
@@ -46,9 +52,13 @@ async def mda_message(ans: Message):
         },
     )
 
+
 @bp.on.message_handler(AccessForAllRule(), text=["/профиль", "/profile"], lower=True)
 async def profile_message(message: Message):
-    if message.reply_message and ((message.from_id in admins_in_conv) or message.reply_message.from_id == message.from_id):
+    if message.reply_message and (
+        (message.from_id in admins_in_conv)
+        or message.reply_message.from_id == message.from_id
+    ):
         profile = (
             await check_or_create(message.reply_message.from_id, message.peer_id)
         )[0]
@@ -62,12 +72,44 @@ async def profile_message(message: Message):
 
     global_user = await GlobalUser.get_or_none(user_id=profile.user_id)
     global_role = await GlobalRole.get(global_userss=global_user.id)
+    
+    upload_srv = (await BOT.api.photos.get_messages_upload_server()).upload_url
+    
+    await make_profile_photo(profile)
+    files = {'photo': open(f"{profile.user_id}.jpeg", "rb")}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(upload_srv, data=files) as resp:
+            data = await resp.read()
+            ready_json = ujson.loads(data)
 
-    await message(
-            "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nЭнергия: {4}/5\nРабота: {5}".format(
-            profile.user_id, global_role, profile.warns, profile.coins, profile.energy, (await profile.work_id)
-        )
-    )
+    photo_object = await BOT.api.photos.save_messages_photo(
+            server=ready_json["server"],
+            photo=ready_json["photo"], 
+            hash=ready_json["hash"])
+
+    os.remove(f"{profile.user_id}.jpeg")
+    await message(attachment=f"photo{photo_object[0].owner_id}_{photo_object[0].id}")
+    #car = "None"
+    #if not profile.car_id is None:
+    #    car = (await Car.get(id=profile.car_id)).name
+
+    #job = "None"
+    #if not profile.work_id_id is None:
+    #    job = (await Work.get(id=profile.work_id_id)).name
+
+    #await message(
+    #    "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}\nМашина: {7}".format(
+    #        profile.user_id,
+    #        global_role,
+    #        profile.warns,
+    #        profile.coins,
+    #        profile.exp,
+    #        profile.energy,
+    #        job,
+    #        car,
+    #    )
+    #)
+
 
 @bp.on.chat_message(AccessForAllRule(), text="/всепреды", lower=True)
 async def watch_all_warns(message: Message):
@@ -76,8 +118,8 @@ async def watch_all_warns(message: Message):
             user_id=message.from_id, peer_id=message.peer_id
         )
         await check_or_create(message.from_id, message.peer_id)
-        if user_in_db == None or user_in_db.count == 0:
-            if user_in_db == None:
+        if user_in_db is None or user_in_db.count == 0:
+            if user_in_db is None:
                 user_in_db = await User(
                     user_id=message.reply_message.from_id, peer_id=message.peer_id
                 ).save()
@@ -104,18 +146,19 @@ async def watch_all_warns(message: Message):
         user_in_db = await User.get_or_none(
             user_id=message.reply_message.from_id, peer_id=message.peer_id
         )
-        if user_in_db != None and user_in_db.warns != 0:
+        if not user_in_db is None and user_in_db.warns != 0:
             await message(
                 f"Количество предупреждений у пользователя с ID {message.reply_message.from_id}: {user_in_db.warns}\nКоманда предлагается к удалению!"
             )
         else:
-            if user_in_db == None:
+            if user_in_db is None:
                 user_in_db = await User(
                     user_id=message.reply_message.from_id, peer_id=message.peer_id
                 ).save()
             await message(
                 f"У пользователя с ID {message.reply_message.from_id} отсутствуют предупреждения!\nКоманда предлагается к удалению!"
             )
+
 
 @bp.on.message_handler(AccessForAllRule(), text="/помощь", lower=True)
 async def help_message(message: Message):
@@ -130,6 +173,7 @@ async def help_message(message: Message):
             "random_id": random.randint(1, 1000000000000000),
         },
     )
+
 
 @bp.on.message_handler(AccessForAllRule(), text="/voteban", lower=True)
 async def voteban_message(message: Message):
@@ -161,32 +205,91 @@ async def voteban_message(message: Message):
             "Перешли сообщение человека, за которого начать голосование за бан!"
         )
 
+
 @bp.on.message_handler(text="/инфодоступ", lower=True)
 async def check_access_message(message: Message):
     await check_or_create(message.from_id, message.peer_id)
     access = "разрешён" if access_for_all else "запрещён"
     await message(f"Доступ к написанию сообщений {access}")
 
+
 @bp.on.message_handler(AccessForAllRule(), text="/регистрация", lower=True)
 async def registr_message(message: Message):
     profile = await User.get_or_none(user_id=message.from_id, peer_id=message.peer_id)
     global_profile = await GlobalUser.get_or_none(user_id=message.from_id)
-    if profile != None:
+    if not profile is None:
         await message("Локальный профиль обнаружен")
     else:
         await User(user_id=message.from_id, peer_id=message.peer_id, warns=0).save()
         await message("Ваш локальный профиль успешно зарегистрирован")
 
-    if global_profile != None:
+    if not global_profile is None:
         await message("Глобальный профиль обнаружен")
     else:
         default_role = await GlobalRole.get(name="Default")
         await GlobalUser(user_id=message.from_id, global_role=default_role).save()
         await message("Глобальный профиль успешно зарегистрирован")
 
+
 @bp.on.message_handler(AccessForAllRule(), text="/контакты", lower=True)
 async def get_contacts(message: Message):
     await check_or_create(message.from_id, message.peer_id)
     name = (await BOT.api.users.get(message.from_id))[0].first_name
-    await message("[id{0}|{1}], список контактов с разработчиком:\nVK: vk.com/jottyfounder\nMail: vladislavbusiness@jottymdbbot.xyz\nПредложения по боту писать на почту."\
-    .format(message.from_id, name))
+    await message(
+        "[id{0}|{1}], список контактов с разработчиком:\nVK: vk.com/jottyfounder\nMail: vladislavbusiness@jottymdbbot.xyz\nПредложения по боту писать на почту.".format(
+            message.from_id, name
+        )
+    )
+
+
+@bp.on.message_handler(AccessForAllRule(), text="/купить_машину <c_id>")
+async def buy_car(message: Message, c_id):
+    if c_id.isdigit():
+        c_id = int(c_id)
+        user = (await check_or_create(message.from_id, message.peer_id))[0]
+        car = await Car.get(id=c_id)
+
+        if (user.coins) >= (car.cost) and user.exp >= car.exp_need  and user.car_id is None:
+            await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+                coins=user.coins - car.cost, car=car
+            )
+            await message(f"Машина {car} куплена!")
+        elif user.coins < car.cost:
+            await message("У тебя недостаточно денег!")
+        elif user.exp < car.exp_need:
+            await message("У тебя недостаточно опыта!")
+        else:
+            await message("У тебя уже есть машина!")
+    else:
+        await message("Введите цифру-ID машины!")
+
+
+@bp.on.message_handler(AccessForAllRule(), text="/продать_машину")
+async def sell_car(message: Message):
+    user = (await check_or_create(message.from_id, message.peer_id))[0]
+    if not user.car_id is None:
+        car_cost = (await Car.get(id=user.car_id)).cost
+        car_cost = car_cost - (car_cost * 0.1)
+        await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+            coins=user.coins + car_cost, car_id=None
+        )
+        await message("Машина продана!")
+    else:
+        await message("У вас нет машины!")
+
+
+@bp.middleware.middleware_handler()
+class ExpMiddleware(Middleware):
+    async def pre(self, message: Message, *args):
+                          
+        if not message.text.startswith("/"):
+            if not user.car_id is None:
+                multiplier = (await Car.get(id=user.car_id)).multiplier
+            else:
+                multiplier = 1
+            msg = [a for a in message.text]
+            msg = [a for a in msg if a != " "]
+            exps = 2 * len(msg) * multiplier
+            updated = await User.get(
+                user_id=message.from_id, peer_id=message.peer_id
+            ).update(exp=exps + user.exp)
