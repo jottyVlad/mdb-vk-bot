@@ -1,8 +1,11 @@
 import sys
 import random
+import os
 
 from vkbottle.bot import Blueprint
 from vkbottle.ext import Middleware
+import aiohttp
+import ujson
 
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole
@@ -69,27 +72,43 @@ async def profile_message(message: Message):
 
     global_user = await GlobalUser.get_or_none(user_id=profile.user_id)
     global_role = await GlobalRole.get(global_userss=global_user.id)
+    
+    upload_srv = (await BOT.api.photos.get_messages_upload_server()).upload_url
+    
+    await make_profile_photo(profile)
+    files = {'photo': open(f"{profile.user_id}.jpeg", "rb")}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(upload_srv, data=files) as resp:
+            data = await resp.read()
+            ready_json = ujson.loads(data)
 
-    car = "None"
-    if not profile.car_id is None:
-        car = (await Car.get(id=profile.car_id)).name
+    photo_object = await BOT.api.photos.save_messages_photo(
+            server=ready_json["server"],
+            photo=ready_json["photo"], 
+            hash=ready_json["hash"])
 
-    job = "None"
-    if not profile.work_id_id is None:
-        job = (await Work.get(id=profile.work_id_id)).name
+    os.remove(f"{profile.user_id}.jpeg")
+    await message(attachment=f"photo{photo_object[0].owner_id}_{photo_object[0].id}")
+    #car = "None"
+    #if not profile.car_id is None:
+    #    car = (await Car.get(id=profile.car_id)).name
 
-    await message(
-        "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}\nМашина: {7}".format(
-            profile.user_id,
-            global_role,
-            profile.warns,
-            profile.coins,
-            profile.exp,
-            profile.energy,
-            job,
-            car,
-        )
-    )
+    #job = "None"
+    #if not profile.work_id_id is None:
+    #    job = (await Work.get(id=profile.work_id_id)).name
+
+    #await message(
+    #    "Ваш ID пользователя: {0}\nГлобальная роль: {1}\nКоличество предупреждений: {2}\nКоличество денег: ${3}\nОпыт: {4}\nЭнергия: {5}/5\nРабота: {6}\nМашина: {7}".format(
+    #        profile.user_id,
+    #        global_role,
+    #        profile.warns,
+    #        profile.coins,
+    #        profile.exp,
+    #        profile.energy,
+    #        job,
+    #        car,
+    #    )
+    #)
 
 
 @bp.on.chat_message(AccessForAllRule(), text="/всепреды", lower=True)
@@ -262,9 +281,8 @@ async def sell_car(message: Message):
 @bp.middleware.middleware_handler()
 class ExpMiddleware(Middleware):
     async def pre(self, message: Message, *args):
+                          
         if not message.text.startswith("/"):
-            await check_or_create(message.from_id, message.peer_id)
-            user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
             if not user.car_id is None:
                 multiplier = (await Car.get(id=user.car_id)).multiplier
             else:

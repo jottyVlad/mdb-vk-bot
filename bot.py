@@ -12,6 +12,7 @@ from routes import (actions, admin_realize,
     )
 import global_settings
 
+
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent)+'/index_page'
 
 async def init():
@@ -34,10 +35,10 @@ APP = aiohttp.web.Application()
 ROUTES = aiohttp.web.RouteTableDef()
 aiohttp_jinja2.setup(APP, loader=jinja2.FileSystemLoader(str(INDEX_DIR)))
 APP.router.add_static('/static/',
-                      path=str('/botenv/index_page/'),
+                      path=str('./index_page/'),
                       name='static')
 
-@ROUTES.get("/")
+@ROUTES.get("/")11
 @aiohttp_jinja2.template('index.html')
 async def hello(request):
     """
