@@ -1,9 +1,16 @@
-from vkbottle import User as vkBottleUser, Bot, Message
-from config import ACCESS_TOKEN, USER_ACCESS_TOKEN
-from models import *
 import typing
 import asyncio
+
+from vkbottle import User as vkBottleUser, Bot, Message
 import ujson
+from PIL import (
+    Image, ImageDraw, ImageFont
+    )
+from io import BytesIO
+
+from config import ACCESS_TOKEN, USER_ACCESS_TOKEN
+from models import *
+
 
 BOT = Bot(ACCESS_TOKEN, loop=asyncio.get_event_loop(), group_id=196816306)
 USER = vkBottleUser(USER_ACCESS_TOKEN)
