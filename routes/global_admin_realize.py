@@ -1,6 +1,7 @@
 import sys
 import random
 from math import *
+from typing import Optional
 
 import ujson
 from vkbottle.bot import Blueprint
@@ -16,7 +17,7 @@ bp = Blueprint(name="Working with global admin functions")
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/разослать <text>", lower=True)
-async def send_messages(message: Message, text: str):
+async def send_messages(message: Message, text: str, _: Optional[User] = None):
     await BOT.api.request(
         "messages.markAsRead",
         {"peer_id": message.peer_id, "mark_conversation_as_read": "1"},
@@ -25,14 +26,14 @@ async def send_messages(message: Message, text: str):
     if convs:
         for conv in convs:
             await BOT.api.messages.send(
-                peer_id=conv, random_id=random.randint(1, 1000000), message=text
+                peer_id=conv, random_id=random.randint(-2e9, 2e9), message=text
             )
 
     await message("Выполнено.")
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/получить_себя")
-async def get_myself(message: Message):
+async def get_myself(message: Message, _: Optional[User] = None):
     conn = Tortoise.get_connection("default")
     dct = await conn.execute_query_dict(
         "SELECT * FROM `users` WHERE `user_id` = 500101793"
@@ -41,13 +42,13 @@ async def get_myself(message: Message):
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
-async def mention_test(message: Message, mention: str):
+async def mention_test(message: Message, mention: str, _: Optional[User] = None):
     print(mention.split("|")[0][1:])
     await message("[id{0}|Maxim]".format(message.from_id))
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="~ <text>", lower=True)
-async def print_or_count(message: Message, text: str):
+async def print_or_count(message: Message, text: str, _: Optional[User] = None):
     try:
         text = text.replace(" ", "")
         copied_text = text
@@ -133,7 +134,7 @@ async def print_or_count(message: Message, text: str):
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/снять_модер <mention>", lower=True)
-async def delete_bot_moder(message: Message, mention: str):
+async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -149,7 +150,7 @@ async def delete_bot_moder(message: Message, mention: str):
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/дать_модер <mention>", lower=True)
-async def give_bot_moder(message: Message, mention: str):
+async def give_bot_moder(message: Message, mention: str, _: Optional[User] = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -165,7 +166,7 @@ async def give_bot_moder(message: Message, mention: str):
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_админ <mention>", lower=True)
-async def give_bot_moder(message: Message, mention: str):
+async def give_bot_moder(message: Message, mention: str, _: Optional[User] = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -181,7 +182,7 @@ async def give_bot_moder(message: Message, mention: str):
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/снять_админ <mention>", lower=True)
-async def delete_bot_moder(message: Message, mention: str):
+async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -197,7 +198,7 @@ async def delete_bot_moder(message: Message, mention: str):
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд добавить <model> <value>")
-async def add_to_db(message: Message, model: str, value: str):
+async def add_to_db(message: Message, model: str, value: str, _: Optional[User] = None):
     value = eval(value)
     if model == "GlobalRole":
         returnable = await GlobalRole(name=value["name"]).save()
@@ -218,7 +219,7 @@ async def add_to_db(message: Message, model: str, value: str):
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд удалить <model> <value>")
-async def delete_from_db(message: Message, model: str, value: str):
+async def delete_from_db(message: Message, model: str, value: str, _: Optional[User] = None):
     try:
         value = eval(value)
         if model == "GlobalRole":
@@ -238,16 +239,16 @@ async def delete_from_db(message: Message, model: str, value: str):
 
         await message("Удалено!")
     except Exception as _:
-        await message("Оошибка удаления!")
+        await message("Ошибка удаления!")
 
 
 @bp.on.message_handler(OnlyAdminAccess(), OnlyBotAdminAccess(), text="тест", lower=True)
-async def test_message(ans: Message):
+async def test_message(ans: Message, _: Optional[User] = None):
     await ans("Привет, чувачелла")
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/доступ", lower=True)
-async def access_message(message: Message):
+async def access_message(message: Message, _: Optional[User] = None):
     global access_for_all
     access_for_all = not access_for_all
     with open("settings.json", "w") as write_file:

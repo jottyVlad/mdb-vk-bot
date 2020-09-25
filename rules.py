@@ -40,7 +40,7 @@ class OnlyBotAdminAccess(AbstractMessageRule):
 class OnlyBotModerAccess(AbstractMessageRule):
     async def check(self, message: Message) -> bool:
         global_user = await GlobalUser.get_or_none(user_id=message.from_id)
-        if global_user == None:
+        if global_user is None:
             return False
         else:
             global_role = str(await GlobalRole.get_or_none(global_userss=global_user.id))
@@ -53,7 +53,7 @@ class OnlyBotModerAccess(AbstractMessageRule):
 class AccessForBotAdmin(AbstractMessageRule):
     async def check(self, message: Message) -> bool:
         try:
-            members = await bot.api.messages.get_conversation_members(message.peer_id)
+            await bot.api.messages.get_conversation_members(message.peer_id)
             return True
         except Exception as _:
             await message("У бота нет доступа к этому чату! Для выполнения данной команды боту надо выдать права "

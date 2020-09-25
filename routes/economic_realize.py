@@ -2,6 +2,7 @@ import sys
 import asyncio
 import datetime
 from threading import Thread
+from typing import Optional
 
 from tortoise import Tortoise
 from vkbottle.bot import Blueprint
@@ -43,12 +44,12 @@ class PayoutsThread(Thread):
             try:
                 loop.run_until_complete(payouts())
                 loop.run_until_complete(asyncio.sleep(15))
-            except:
+            except Exception as _:
                 continue
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_работу <j_id>")
-async def give_job(message: Message, j_id: str):
+async def give_job(message: Message, j_id: str, _: Optional[User] = None):
     if j_id.isdigit():
         j_id = int(j_id)
         work = await Work.get(id=j_id)
@@ -61,10 +62,20 @@ async def give_job(message: Message, j_id: str):
 
 
 @bp.on.message_handler(text="/список_работ")
-async def job_list(message: Message):
+async def job_list(message: Message, _: Optional[User] = None):
     jobs = await Work.all()
     await message(
         "\n".join(
             [f"ID: {job.id}; Название: {job.name}; ЗП: {job.salary}" for job in jobs]
+        )
+    )
+
+
+@bp.on.message_handler(text="/список_машин")
+async def job_list(message: Message, _: Optional[User] = None):
+    cars = await Car.all()
+    await message(
+        "\n".join(
+            [f"ID: {car.multiplier}; Название: {car.multiplier}; Множитель: {car.multiplier}" for car in cars]
         )
     )

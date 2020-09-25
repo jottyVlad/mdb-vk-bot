@@ -15,7 +15,8 @@ from models import *
 BOT = Bot(ACCESS_TOKEN, loop=asyncio.get_event_loop(), group_id=196816306)
 USER = vkBottleUser(USER_ACCESS_TOKEN)
 
-async def is_mention(mention: str) -> typing.Tuple[bool, str]:
+
+async def is_mention(mention: str) -> typing.Tuple[bool, int]:
     if all(char in mention for char in "[|]") and any(
         word in mention for word in ("id", "club")
     ):
@@ -24,10 +25,11 @@ async def is_mention(mention: str) -> typing.Tuple[bool, str]:
         else:
             mention = mention[3:]
         mention = int(mention.split("|")[0])
-        return (True, mention)
+        return True, mention
 
     else:
-        return (False, "")
+        return False, ""
+
 
 async def check_or_create(
     user_id: int, peer_id: int, warns: int = 0
@@ -41,16 +43,17 @@ async def check_or_create(
     """
     profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
     global_profile = await GlobalUser.get_or_none(user_id=user_id)
-    if profile == None:
+    if profile is None:
         await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
         profile = await User.get(user_id=user_id, peer_id=peer_id)
 
-    if global_profile == None:
+    if global_profile is None:
         default_role = await GlobalRole.get(name="Default")
         await GlobalUser(user_id=user_id, global_role=default_role).save()
         global_profile = GlobalUser.get(user_id=user_id)
 
-    return (profile, global_profile)
+    return profile, global_profile
+
 
 async def get_access_for_all() -> bool:
     with open("settings.json", "r") as read_file:
@@ -60,6 +63,7 @@ async def get_access_for_all() -> bool:
     return access_for_all
 
 access_for_all = asyncio.get_event_loop().run_until_complete(get_access_for_all())
+
 
 async def make_profile_photo(user: User):
     x, y = 30, 50
@@ -82,11 +86,11 @@ async def make_profile_photo(user: User):
     draw.text((x, y), f"EXP: {user.exp}", color, font=font)
     y += 35
     job = "безработный"
-    if user.work_id_id != None:
+    if user.work_id_id is not None:
         job = (await Work.get(id=user.work_id_id)).name
 
     car = "отсутствует"
-    if user.car_id != None:
+    if user.car_id is not None:
         car = (await Car.get(id=user.car_id)).name
     
     draw.text((x, y), f"Работа: {job}", color, font=font)

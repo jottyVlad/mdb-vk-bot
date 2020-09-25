@@ -1,7 +1,6 @@
 import aiohttp
 from aiohttp import web
 from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
-from tortoise import Tortoise, run_async
 import tortoise
 
 import pathlib
@@ -15,6 +14,7 @@ from routes import (actions, admin_realize,
                     global_admin_realize, users_realize, economic_realize
                     )
 import global_settings
+from middlewares import ExpMiddleware
 
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent) + '/index_page'
 
@@ -48,27 +48,21 @@ if not WEBHOOK_ACCEPT:
 @ROUTES.get("/")
 @aiohttp_jinja2.template('index.html')
 async def hello(request):
-    """
-        ROOT SITE RESPONSE
-    """
+    """Root site response"""
     return {}
 
 
 @ROUTES.get("/when_update")
 @aiohttp_jinja2.template('whenupdate.html')
 async def whenupdate(request):
-    """
-        WHENUPDATE SITE RESPONSE
-    """
+    """When update site response"""
     return {}
 
 
 @ROUTES.get("/changelog")
 @aiohttp_jinja2.template('changelog.html')
 async def changelog(request):
-    """
-        WHENUPDATE SITE RESPONSE
-    """
+    """Changelog site response"""
     return {}
 
 

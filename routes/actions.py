@@ -1,5 +1,6 @@
 import sys
 import random
+from typing import Optional
 
 from vkbottle.bot import Blueprint
 
@@ -13,11 +14,12 @@ bp = Blueprint(name="Working with actions functions")
 
 
 @bp.on.chat_invite()
-async def invite_message(action: Message):
+async def invite_message(action: Message, _: Optional[User] = None):
     await BOT.api.request(
         "messages.send",
         {
-            "message": 'Всем привет! Для того, чтобы я отвечал на сообщения, выдайте мне "Доступ ко всей переписке". Для доступа ко всем функциям выдайте мне права "Администратора"',
+            "message": 'Всем привет! Для того, чтобы я отвечал на сообщения, выдайте мне "Доступ ко всей переписке". '
+                       'Для доступа ко всем функциям выдайте мне права "Администратора"',
             "random_id": random.randint(-2e9, 2e9),
             "peer_id": action.peer_id,
         },

@@ -1,4 +1,5 @@
 import sys
+from typing import Optional
 
 from vkbottle.bot import Blueprint
 
@@ -6,14 +7,12 @@ from global_settings import *
 from models import User
 from rules import *
 
-
 sys.path.append("..")
 bp = Blueprint(name="Working with admin functions")
 
 
 @bp.on.message_handler(OnlyAdminAccess(), AccessForBotAdmin(), text="бан", lower=True)
-async def bot_ban_message(message: Message):
-    await check_or_create(message.from_id, message.peer_id)
+async def bot_ban_message(message: Message, _: Optional[User] = None):
     if message.reply_message:
         await message(
             f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {message.reply_message.from_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ!"
@@ -50,108 +49,115 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower="True")
-async def warn_with_mention_message(message: Message, mention: str, count: str):
+async def warn_with_mention_message(message: Message, mention: str, count: str, _: Optional[User] = None):
+    # Checking for mention
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
     else:
         await message("Я не вижу упоминания! Упоминание обязательно!")
         return
 
+    # Checking for number-count of warnings
     if (not count.isdigit()) and not (count.startswith("-") and count[1:].isdigit()):
         await message("Текст вместо цифры?.. М-да...")
     else:
         count = int(count)
+        # Checking for count of giving warnings
         if count > 4:
-            await check_or_create(message.from_id, message.peer_id)
             await message(
                 "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч"
             )
         else:
-            user_in_db = await User.get_or_none(
+            user_mention = await User.get_or_none(
                 user_id=mention, peer_id=message.peer_id
             )
-            if user_in_db == None and count < 0:
+            if user_mention is None and count < 0:
                 await check_or_create(mention, message.peer_id)
                 await message(
                     "Ну нет у этого юзера предов. Ну не могу я забрать то, чего НЕТУ!!"
                 )
-            elif user_in_db == None and count > 0:
+            elif user_mention is None and count > 0:
                 await check_or_create(message.from_id, message.peer_id, count)
                 await message(
                     f"Предупреждение выдано пользователю с ID {mention}, общее количество: {count}"
                 )
-            elif user_in_db != None:
+            elif user_mention is not None:
                 await check_or_create(message.from_id, message.peer_id)
-                current_warns = user_in_db.warns
+                current_warns = user_mention.warns
                 if current_warns + count < 0:
                     await message(
-                        f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 варнов, что невозможно! Общее количество предов: {current_warns}"
+                        f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 "
+                        f"варнов, что невозможно! Общее количество предов: {current_warns} "
                     )
                 else:
-                    updated_user = await User.get(
+                    await User.get(
                         user_id=mention, peer_id=message.peer_id
                     ).update(warns=current_warns + count)
                     if current_warns + count >= 4:
                         await message(
-                            f"Предупреждение выдано, общее количество больше или равно 4, требуется бан пользователя! Общее количество предов: {current_warns+count}"
+                            f"Предупреждение выдано, общее количество больше или равно 4, требуется бан пользователя! "
+                            f"Общее количество предов: {current_warns + count} "
                         )
                     else:
                         await message(
-                            f"Предупреждение выдано, общее количество: {current_warns+count}"
+                            f"Предупреждение выдано, общее количество: {current_warns + count}"
                         )
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower="True")
-async def warn_with_reply_message(message: Message, count: str):
+async def warn_with_reply_message(message: Message, count: str, _: Optional[User] = None):
     if message.reply_message:
-        await check_or_create(message.from_id, message.peer_id)
+        # Checking for number-count of warnings
         if (not count.isdigit()) and not (
-            count.startswith("-") and count[1:].isdigit()
+                count.startswith("-") and count[1:].isdigit()
         ):
             await message("Текст вместо цифры?.. М-да...")
         else:
             count = int(count)
+            # Checking for count of giving warnings
             if count > 4:
                 await message(
                     "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч"
                 )
             else:
-                user_in_db = await User.get_or_none(
+                user_reply = await User.get_or_none(
                     user_id=message.reply_message.from_id, peer_id=message.peer_id
                 )
-                if user_in_db == None and count < 0:
-                    await check_or_create(mention, message.peer_id)
+                if user_reply is None and count < 0:
+                    await check_or_create(message.reply_message.from_id, message.peer_id)
                     await message(
                         "Ну нет у этого юзера предов. Ну не могу я забрать то, чего НЕТУ!!"
                     )
-                elif user_in_db == None and count > 0:
+                elif user_reply is None and count > 0:
                     await check_or_create(
                         message.reply_message.from_id, message.peer_id, count
                     )
                     await message(
                         f"Предупреждение выдано пользователю с ID {message.reply_message.from_id}, общее количество: {count}"
                     )
-                elif user_in_db != None:
+                elif user_reply is not None:
                     await check_or_create(
                         message.reply_message.from_id, message.peer_id
                     )
-                    current_warns = user_in_db.warns
+                    current_warns = user_reply.warns
                     if current_warns + count < 0:
                         await message(
-                            f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 варнов, что невозможно! Общее количество предов: {current_warns}"
+                            f"Предупреждение НЕ выдано, т.к. при забирании такого кол-ва варнов у него будет меньше 0 "
+                            f"варнов, что невозможно! Общее количество предов: {current_warns} "
                         )
                     else:
-                        updated_user = await User.get(
+                        await User.get(
                             user_id=message.reply_message.from_id,
                             peer_id=message.peer_id,
                         ).update(warns=current_warns + count)
                         if current_warns + count >= 4:
                             await message(
-                                f"Предупреждение выдано, общее количество больше или равно 4, требуется бан пользователя! Общее количество предов: {current_warns+count}"
+                                f"Предупреждение выдано, общее количество больше или равно 4, требуется бан "
+                                f"пользователя! Общее количество предов: {current_warns + count} "
                             )
                         else:
                             await message(
-                                f"Предупреждение выдано, общее количество: {current_warns+count}"
+                                f"Предупреждение выдано, общее количество: {current_warns + count}"
                             )
 
     else:
