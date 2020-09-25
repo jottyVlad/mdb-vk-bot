@@ -49,7 +49,7 @@ class PayoutsThread(Thread):
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_работу <j_id>")
-async def give_job(message: Message, j_id: str, _: Optional[User] = None):
+async def give_job(message: Message, _: Optional[User] = None, j_id: str = None):
     if j_id.isdigit():
         j_id = int(j_id)
         work = await Work.get(id=j_id)

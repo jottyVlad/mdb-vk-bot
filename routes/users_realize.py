@@ -189,7 +189,7 @@ async def get_contacts(message: Message, _: Optional[User] = None):
 
 
 @bp.on.message_handler(AccessForAllRule(), text="/купить_машину <c_id>")
-async def buy_car(message: Message, c_id: str, user: Optional[User] = None):
+async def buy_car(message: Message, user: Optional[User] = None, c_id: str = None):
     if c_id.isdigit():
         c_id = int(c_id)
         car = await Car.get(id=c_id)

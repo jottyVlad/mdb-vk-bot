@@ -26,4 +26,4 @@ class ExpMiddleware(Middleware):
             user = (await check_or_create(message.from_id, message.peer_id))[0]
             return user
 
-        return 'None'
+        return None

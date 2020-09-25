@@ -44,12 +44,13 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
 
     if message.from_id == admin_id and not returning:
         await message(
-            f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {user_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ!"
+            f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {user_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ БУКВАМИ) ДЛЯ ТОГО, ЧТОБЫ "
+            f"ЗАБАНИТЬ, ИЛИ 'ВЫЙТИ' (ЗАГЛАВНЫМИ), ЧТОБЫ ВЫЙТИ ИЗ ЭТОГО МЕНЮ! "
         )
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower="True")
-async def warn_with_mention_message(message: Message, mention: str, count: str, _: Optional[User] = None):
+async def warn_with_mention_message(message: Message, _: Optional[User] = None, mention: str = None, count: str = None):
     # Checking for mention
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
@@ -105,7 +106,7 @@ async def warn_with_mention_message(message: Message, mention: str, count: str, 
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower="True")
-async def warn_with_reply_message(message: Message, count: str, _: Optional[User] = None):
+async def warn_with_reply_message(message: Message, _: Optional[User] = None, count: str = None):
     if message.reply_message:
         # Checking for number-count of warnings
         if (not count.isdigit()) and not (

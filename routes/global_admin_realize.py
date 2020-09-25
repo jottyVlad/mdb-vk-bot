@@ -17,7 +17,7 @@ bp = Blueprint(name="Working with global admin functions")
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/разослать <text>", lower=True)
-async def send_messages(message: Message, text: str, _: Optional[User] = None):
+async def send_messages(message: Message, _: Optional[User] = None, text: str = None):
     await BOT.api.request(
         "messages.markAsRead",
         {"peer_id": message.peer_id, "mark_conversation_as_read": "1"},
@@ -42,13 +42,13 @@ async def get_myself(message: Message, _: Optional[User] = None):
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
-async def mention_test(message: Message, mention: str, _: Optional[User] = None):
+async def mention_test(message: Message, _: Optional[User] = None, mention: str = None):
     print(mention.split("|")[0][1:])
     await message("[id{0}|Maxim]".format(message.from_id))
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="~ <text>", lower=True)
-async def print_or_count(message: Message, text: str, _: Optional[User] = None):
+async def print_or_count(message: Message, _: Optional[User] = None, text: str = None):
     try:
         text = text.replace(" ", "")
         copied_text = text
@@ -166,7 +166,7 @@ async def give_bot_moder(message: Message, mention: str, _: Optional[User] = Non
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_админ <mention>", lower=True)
-async def give_bot_moder(message: Message, mention: str, _: Optional[User] = None):
+async def give_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -182,7 +182,7 @@ async def give_bot_moder(message: Message, mention: str, _: Optional[User] = Non
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/снять_админ <mention>", lower=True)
-async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
+async def delete_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
     if (await is_mention(mention))[0]:
         mention = (await is_mention(mention))[1]
 
@@ -197,29 +197,29 @@ async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = N
     await message("Модерка успешно снята!")
 
 
-@bp.on.message_handler(OnlyMaximSend(), text="/бд добавить <model> <value>")
-async def add_to_db(message: Message, model: str, value: str, _: Optional[User] = None):
+@bp.on.message_handler(OnlyMaximSend(), text="/бд добавить <model_name> <value>")
+async def add_to_db(message: Message, _: Optional[User] = None, model_name: str = None, value: str = None):
     value = eval(value)
-    if model == "GlobalRole":
+    if model_name == "GlobalRole":
         returnable = await GlobalRole(name=value["name"]).save()
-    elif model == "GlobalUser":
+    elif model_name == "GlobalUser":
         returnable = await GlobalUser(
             user_id=value["user_id"], global_role=value["global_role"]
         ).save()
-    elif model == "User":
+    elif model_name == "User":
         returnable = await User(**value).save()
-    elif model == "Conversation":
+    elif model_name == "Conversation":
         returnable = await Conversation(**value).save()
-    elif model == "Work":
+    elif model_name == "Work":
         returnable = await Work(**value).save()
-    elif model == "Car":
+    elif model_name == "Car":
         returnable = await Car(**value).save()
 
     await message(str(returnable))
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд удалить <model> <value>")
-async def delete_from_db(message: Message, model: str, value: str, _: Optional[User] = None):
+async def delete_from_db(message: Message, _: Optional[User] = None, model: str = None, value: str = None):
     try:
         value = eval(value)
         if model == "GlobalRole":
