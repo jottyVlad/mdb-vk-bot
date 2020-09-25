@@ -1,13 +1,14 @@
 import sys
-
-sys.path.append("..")
+import random
 
 from vkbottle.bot import Blueprint
+
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole
 from rules import *
-import random
 
+
+sys.path.append("..")
 bp = Blueprint(name="Working with actions functions")
 
 

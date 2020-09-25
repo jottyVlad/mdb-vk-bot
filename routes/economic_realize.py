@@ -20,7 +20,7 @@ async def payouts():
 
     conn = Tortoise.get_connection("default")
     time_unix = int(datetime.datetime.now().timestamp() - 86400)
-    # users = await conn.execute_query_dict(f"SELECT * FROM `users` WHERE `work_id_id` != NULL AND `job_lp` != NULL and `job_lp` >= {time_unix}")
+
     users = await conn.execute_query_dict(
         f"SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= {time_unix}"
     )

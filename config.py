@@ -11,3 +11,6 @@ SECRET = os.getenv("SECRET")
 USER_ACCESS_TOKEN = os.getenv("USER_ACCESS_TOKEN")
 WEBHOOK_ACCEPT = bool(int(os.getenv("WEBHOOK_ACCEPT", 0)))
 CONFIRMATION_TOKEN = os.getenv("CONFIRMATION_TOKEN")
+NEW_START = bool(int(os.getenv("NEW_START", 0)))
+
+admins_in_conv = [444944367, 10885998, 26211044, 500101793]

@@ -1,16 +1,17 @@
 import sys
+import random
+from math import *
 
-sys.path.append("..")
-
+import ujson
 from vkbottle.bot import Blueprint
+from tortoise import Tortoise
+
 from global_settings import *
 from models import Conversation, User, GlobalUser, GlobalRole, Work
 from rules import *
-from math import *
-import random
-import ujson
-from tortoise import Tortoise
 
+
+sys.path.append("..")
 bp = Blueprint(name="Working with global admin functions")
 
 
@@ -141,7 +142,7 @@ async def delete_bot_moder(message: Message, mention: str):
         return
 
     global_role_default = await GlobalRole.get(name="Default")
-    global_user = await GlobalUser.get(user_id=mention).update(
+    await GlobalUser.get(user_id=mention).update(
         global_role=global_role_default
     )
     await message("Модерка успешно снята!")
@@ -157,7 +158,7 @@ async def give_bot_moder(message: Message, mention: str):
         return
 
     global_role_moder = await GlobalRole.get(name="Moderator")
-    global_user = await GlobalUser.get(user_id=mention).update(
+    await GlobalUser.get(user_id=mention).update(
         global_role=global_role_moder
     )
     await message("Права модератора успешно выданы!")
@@ -173,7 +174,7 @@ async def give_bot_moder(message: Message, mention: str):
         return
 
     global_role_moder = await GlobalRole.get(name="Administrator")
-    global_user = await GlobalUser.get(user_id=mention).update(
+    await GlobalUser.get(user_id=mention).update(
         global_role=global_role_moder
     )
     await message("Права администратора успешно выданы!")
@@ -189,7 +190,7 @@ async def delete_bot_moder(message: Message, mention: str):
         return
 
     global_role_default = await GlobalRole.get(name="Default")
-    global_user = await GlobalUser.get(user_id=mention).update(
+    await GlobalUser.get(user_id=mention).update(
         global_role=global_role_default
     )
     await message("Модерка успешно снята!")
@@ -221,22 +222,22 @@ async def delete_from_db(message: Message, model: str, value: str):
     try:
         value = eval(value)
         if model == "GlobalRole":
-            returnable = await GlobalRole.get(name=value["name"]).delete()
+            await GlobalRole.get(name=value["name"]).delete()
         elif model == "GlobalUser":
-            returnable = await GlobalUser.get(
+            await GlobalUser.get(
                 user_id=value["user_id"], global_role=value["global_role"]
             ).delete()
         elif model == "User":
-            returnable = await User.get(**value).delete()
+            await User.get(**value).delete()
         elif model == "Conversation":
-            returnable = await Conversation.get(**value).delete()
+            await Conversation.get(**value).delete()
         elif model == "Work":
-            returnable = await Work.get(**value).delete()
+            await Work.get(**value).delete()
         elif model == "Car":
-            returnable = await Car.get(**value).delete()
+            await Car.get(**value).delete()
 
         await message("Удалено!")
-    except:
+    except Exception as _:
         await message("Оошибка удаления!")
 
 

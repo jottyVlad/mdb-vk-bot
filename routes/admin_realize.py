@@ -1,14 +1,13 @@
 import sys
 
-sys.path.append("..")
-
 from vkbottle.bot import Blueprint
+
 from global_settings import *
 from models import User
 from rules import *
-from vkbottle.branch import Branch, ExitBranch
-import random
 
+
+sys.path.append("..")
 bp = Blueprint(name="Working with admin functions")
 
 
