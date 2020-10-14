@@ -42,7 +42,7 @@ body {
 .changelog {
 	color: #fff;
 }
-.changelog>a {
+.changelog>a, #arrow-back-whenupdate {
 	color: #fff;
 	display: block;
 }
