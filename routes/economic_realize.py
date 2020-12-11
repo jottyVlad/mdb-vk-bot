@@ -76,6 +76,6 @@ async def job_list(message: Message, _: Optional[User] = None):
     cars = await Car.all()
     await message(
         "\n".join(
-            [f"ID: {car.multiplier}; Название: {car.multiplier}; Множитель: {car.multiplier}" for car in cars]
+            [f"ID: {car.id}; Название: {car.name}; Множитель: {car.multiplier}" for car in cars]
         )
     )

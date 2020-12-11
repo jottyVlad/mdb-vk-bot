@@ -121,7 +121,7 @@ async def watch_all_warns(message: Message, user: Optional[User] = None):
             )
 
 
-@bp.on.message_handler(AccessForAllRule(), text="/помощь", lower=True)
+@bp.on.message_handler(AccessForAllRule(), text=["/помощь", "/help"], lower=True)
 async def help_message(message: Message, _: Optional[User] = None):
     await USER.api.request(
         "messages.send",
@@ -136,7 +136,7 @@ async def help_message(message: Message, _: Optional[User] = None):
             "group_id": BOT.group_id,
             "peer_id": message.peer_id,
             "expire_ttl": "120",
-            "random_id": random.randint(-2e9, 2e9),
+            "random_id": random.randint(int(-2e9), int(2e9)),
         },
     )
 

@@ -49,7 +49,7 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
         )
 
 
-@bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower="True")
+@bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower=True)
 async def warn_with_mention_message(message: Message, _: Optional[User] = None, mention: str = None, count: str = None):
     # Checking for mention
     if (await is_mention(mention))[0]:
@@ -105,7 +105,7 @@ async def warn_with_mention_message(message: Message, _: Optional[User] = None, 
                         )
 
 
-@bp.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower="True")
+@bp.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower=True)
 async def warn_with_reply_message(message: Message, _: Optional[User] = None, count: str = None):
     if message.reply_message:
         # Checking for number-count of warnings
