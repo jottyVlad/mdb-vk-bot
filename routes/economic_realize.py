@@ -79,3 +79,37 @@ async def job_list(message: Message, _: Optional[User] = None):
             [f"ID: {car.id}; Название: {car.name}; Множитель: {car.multiplier}" for car in cars]
         )
     )
+
+
+@bp.on.message_handler(AccessForAllRule(), text="/купить_машину <c_id>")
+async def buy_car(message: Message, user: Optional[User] = None, c_id: str = None):
+    if c_id.isdigit():
+        c_id = int(c_id)
+        car = await Car.get(id=c_id)
+
+        if user.coins >= car.cost and user.exp >= car.exp_need and user.car_id is None:
+            await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+                coins=user.coins - car.cost, car=car
+            )
+            await message(f"Машина {car} куплена!")
+        elif user.coins < car.cost:
+            await message("У тебя недостаточно денег!")
+        elif user.exp < car.exp_need:
+            await message("У тебя недостаточно опыта!")
+        else:
+            await message("У тебя уже есть машина!")
+    else:
+        await message("Введите цифру-ID машины!")
+
+
+@bp.on.message_handler(AccessForAllRule(), text="/продать_машину")
+async def sell_car(message: Message, user: Optional[User] = None):
+    if user.car_id is not None:
+        car_cost = (await Car.get(id=user.car_id)).cost
+        car_cost = car_cost - (car_cost * 0.1)
+        await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
+            coins=user.coins + car_cost, car_id=None
+        )
+        await message("Машина продана!")
+    else:
+        await message("У вас нет машины!")
