@@ -5,7 +5,7 @@ from tortoise import fields
 class User(Model):
     id = fields.IntField(pk=True)
     user_id = fields.IntField()
-    peer_id = fields.IntField() #NOTE: разный peer_id?
+    chat = fields.ForeignKeyField('models.Conversation', related_name="chat")
     coins = fields.IntField(default=100)
     energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)

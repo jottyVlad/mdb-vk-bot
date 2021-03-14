@@ -3,7 +3,7 @@ from vkbottle.ext import Middleware
 
 from config import NEW_START
 from global_settings import BOT
-from utils.main import check_or_create
+from utils.db_methods import check_or_create
 from models import Car, User
 
 

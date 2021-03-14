@@ -1,10 +1,17 @@
+import random
 import typing
 
 import ujson
 from PIL import Image, ImageDraw, ImageFont
+from vkbottle.types.message import Message
 
+from config import ADMINS_IN_CONV
+from global_settings import USER, BOT
 from models import User, GlobalUser, GlobalRole, Work, Car
-from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR
+from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
+    MAX_RANDOM_ID_INT
+from utils.db_methods import check_or_create
+from utils.errors import WrongWarnsCountException
 
 
 def is_mention(mention: str) -> typing.Union[typing.Tuple[bool, int], typing.Tuple[bool, str]]:
@@ -20,27 +27,6 @@ def is_mention(mention: str) -> typing.Union[typing.Tuple[bool, int], typing.Tup
 
     else:
         return False, ""
-
-
-async def check_or_create(
-        user_id: int, peer_id: int, warns: int = 0
-) -> typing.Tuple[User, GlobalUser]:
-    """
-    check for user in current chat
-    and global user in database
-    """
-    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
-    if profile is None:
-        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
-        profile = await User.get(user_id=user_id, peer_id=peer_id)
-
-    global_profile = await GlobalUser.get_or_none(user_id=user_id)
-    if global_profile is None:
-        default_role = await GlobalRole.get(name="Default")
-        await GlobalUser(user_id=user_id, global_role=default_role).save()
-        global_profile = GlobalUser.get(user_id=user_id)
-
-    return profile, global_profile
 
 
 async def get_access_for_all() -> bool:
@@ -84,3 +70,77 @@ async def make_profile_photo(user: User):
     y += 35
     draw.text((x, y), f"Количество предупреждений: {user.warns}", BLACK_COLOR, font=font)
     img.save(f"{user.user_id}.jpeg")
+
+
+def get_user_from_mention(mention: str) -> typing.Union[str, int]:
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
+
+    else:
+        return ""
+
+    return mention
+
+
+async def send_with_bomb(text: str, peer_id: int, **kwargs):
+    await USER.api.request(
+        "messages.send",
+        {
+            "message": text,
+            "group_id": BOT.group_id,
+            "peer_id": peer_id,
+            "expire_ttl": kwargs['ttl'] | "20",
+            "random_id": random.randint(MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT),
+        },
+    )
+
+
+async def create_poll(question: str, is_anonymous: bool,
+                      is_multiply: bool, answers: typing.List[str], disable_unvote: bool) -> dict:
+    poll = await USER.api.request(
+        "polls.create",
+        {
+            "question": question,
+            "is_anonymous": int(is_anonymous),
+            "is_multiply": int(is_multiply),
+            "add_answers": f'{answers}',
+            "disable_unvote": int(disable_unvote),
+        },
+    )
+
+    return poll
+
+
+def is_replied_self(message: Message) -> bool:
+    if (
+            message.reply_message.from_id == message.from_id
+            or message.reply_message.from_id in ADMINS_IN_CONV
+            or message.reply_message.from_id == -BOT.group_id
+    ):
+        return True
+
+    return False
+
+
+async def give_warns(message: Message, user: typing.Optional[User], count: int) -> User:
+    if user is None:
+        if 4 >= count >= 0:
+            await check_or_create(message.from_id, message.peer_id, count)
+            user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
+            return user
+
+        else:
+            raise WrongWarnsCountException("Wrong count of giving warns")
+
+    else:
+        if 4 >= user.warns + count >= 0:
+            await User.get(
+                user_id=user.user_id, peer_id=message.peer_id
+            ).update(warns=user.warns + count)
+
+            user = await User.get(user_id=user.user_id, peer_id=message.peer_id)
+
+            return user
+
+        else:
+            raise WrongWarnsCountException("Wrong count of giving warns")

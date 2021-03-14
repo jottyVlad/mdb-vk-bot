@@ -14,3 +14,4 @@ CONFIRMATION_TOKEN = os.getenv("CONFIRMATION_TOKEN")
 NEW_START = bool(int(os.getenv("NEW_START", 0)))
 ADMINS_IN_CONV = list(map(int, os.getenv("ADMINS_IN_CONV").split(',')))
 
+BOT_GROUP_ID = 196816306

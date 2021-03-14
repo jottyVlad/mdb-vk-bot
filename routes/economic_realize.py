@@ -7,6 +7,7 @@ from tortoise import Tortoise
 from vkbottle.bot import Blueprint
 
 from global_settings import *
+from models import Work, User, Car
 from rules import *
 
 sys.path.append("..")
@@ -18,12 +19,8 @@ async def payouts():
     conn = Tortoise.get_connection("default")
     time_unix = int(datetime.datetime.now().timestamp() - 86400)
 
-    #TODO: возможна SQL-инъекция. Переписать, используя values
-    #users = await conn.execute_query_dict(
-    #    "SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= ?", [time_unix]
-    #)
     users = await conn.execute_query_dict(
-        f"SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= {time_unix}"
+        "SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= ?", [time_unix]
     )
     for user in users:
         work = await Work.get(id=user["work_id_id"])
@@ -53,7 +50,7 @@ async def give_job(message: Message, _: Optional[User] = None, j_id: str = None)
     if j_id.isdigit():
         j_id = int(j_id)
         work = await Work.get(id=j_id)
-        #TODO: затестить
+        # TODO: затестить
         await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
             work_id=work, job_lp=int(datetime.datetime.now().timestamp())
         )
@@ -92,7 +89,7 @@ async def buy_car(message: Message, user: Optional[User] = None, c_id: str = Non
             await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
                 coins=user.coins - car.cost, car=car
             )
-            #TODO: рассмотреть возможность вынести проверку в отдельный метод
+            # TODO: рассмотреть возможность вынести проверку в отдельный метод
             await message(f"Машина {car} куплена!")
         elif user.coins < car.cost:
             await message("У тебя недостаточно денег!")
@@ -108,7 +105,7 @@ async def buy_car(message: Message, user: Optional[User] = None, c_id: str = Non
 async def sell_car(message: Message, user: Optional[User] = None):
     if user.car_id is not None:
         car_cost = (await Car.get(id=user.car_id)).cost
-        #TODO: число 0.1 в константу
+        # TODO: число 0.1 в константу
         car_cost = car_cost - (car_cost * 0.1)
         await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
             coins=user.coins + car_cost, car_id=None
