@@ -16,6 +16,8 @@ class ExpMiddleware(Middleware):
                     multiplier = (await Car.get(id=user.car_id)).multiplier
                 else:
                     multiplier = 1
+
+                # TODO: рассмотреть возможность форматирования текста в отдельном методе
                 msg = [a for a in message.text]
                 msg = [a for a in msg if a != " "]
                 exps = 2 * len(msg) * multiplier

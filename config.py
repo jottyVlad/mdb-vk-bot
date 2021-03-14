@@ -12,5 +12,7 @@ USER_ACCESS_TOKEN = os.getenv("USER_ACCESS_TOKEN")
 WEBHOOK_ACCEPT = bool(int(os.getenv("WEBHOOK_ACCEPT", 0)))
 CONFIRMATION_TOKEN = os.getenv("CONFIRMATION_TOKEN")
 NEW_START = bool(int(os.getenv("NEW_START", 0)))
+ADMINS_IN_CONV = list(map(int, os.getenv("ADMINS_IN_CONV").split(',')))
 
-admins_in_conv = [444944367, 10885998, 26211044, 500101793]
+MAX_RANDOM_ID_INT = int(2e9)
+MIN_RANDOM_ID_INT = int(-2e9)

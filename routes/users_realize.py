@@ -1,17 +1,14 @@
-import sys
-import random
 import os
+import random
+import sys
 from typing import Optional
 
-from vkbottle.bot import Blueprint
-from vkbottle.ext import Middleware
 import aiohttp
-import ujson
+from vkbottle.bot import Blueprint
 
 from global_settings import *
-from models import Conversation, User, GlobalUser, GlobalRole
+from models import User
 from rules import *
-from config import admins_in_conv, NEW_START
 
 sys.path.append("..")
 bp = Blueprint(name="Working with users functions")
@@ -24,6 +21,8 @@ async def hi_message(ans: Message, _: Optional[User] = None):
 
 @bp.on.message_handler(AccessForAllRule(), text="максим", lower=True)
 async def maxim_message(ans: Message, _: Optional[User] = None):
+    #TODO: взять 2e9 из констант
+    #TODO: следующая строка - в отедльный метод
     await USER.api.request(
         "messages.send",
         {
@@ -38,6 +37,8 @@ async def maxim_message(ans: Message, _: Optional[User] = None):
 
 @bp.on.message_handler(AccessForAllRule(), text="мда", lower=True)
 async def mda_message(ans: Message, _: Optional[User] = None):
+    #TODO: взять 2e9 из констант
+    #TODO: следующая строка - в отедльный метод
     await USER.api.request(
         "messages.send",
         {
@@ -52,11 +53,9 @@ async def mda_message(ans: Message, _: Optional[User] = None):
 
 @bp.on.message_handler(AccessForAllRule(), text=["/профиль", "/profile"], lower=True)
 async def profile_message(message: Message, profile: Optional[User] = None):
-
     if message.reply_message \
             and ((message.from_id != message.reply_message)
-                 and (message.from_id not in admins_in_conv)):
-
+                 and (message.from_id not in ADMINS_IN_CONV)):
         await message("Доступ запрещен!")
         return
 
@@ -78,6 +77,7 @@ async def profile_message(message: Message, profile: Optional[User] = None):
     await message(attachment=f"photo{photo_object[0].owner_id}_{photo_object[0].id}")
 
 
+#TODO: распилить всё на методы
 @bp.on.chat_message(AccessForAllRule(), text="/всепреды", lower=True)
 async def watch_all_warns(message: Message, user: Optional[User] = None):
     if not message.reply_message:
@@ -93,7 +93,7 @@ async def watch_all_warns(message: Message, user: Optional[User] = None):
             )
 
     if (
-            message.from_id not in admins_in_conv
+            message.from_id not in ADMINS_IN_CONV
             and message.reply_message.from_id != message.from_id
     ):
         await message(
@@ -121,6 +121,7 @@ async def watch_all_warns(message: Message, user: Optional[User] = None):
             )
 
 
+#TODO: взять из метода
 @bp.on.message_handler(AccessForAllRule(), text=["/помощь", "/help"], lower=True)
 async def help_message(message: Message, _: Optional[User] = None):
     await USER.api.request(
@@ -147,12 +148,13 @@ async def voteban_message(message: Message, _: Optional[User] = None):
         await check_or_create(message.reply_message.from_id, message.peer_id)
         if (
                 message.reply_message.from_id == message.from_id
-                or message.reply_message.from_id in admins_in_conv
+                or message.reply_message.from_id in ADMINS_IN_CONV
                 or message.reply_message.from_id == -BOT.group_id
         ):
             await message("Просто попроси бана себе, а")
 
         else:
+            #TODO: тоже из отдельного метода
             poll = await USER.api.request(
                 "polls.create",
                 {

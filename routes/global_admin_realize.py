@@ -1,16 +1,14 @@
-import sys
 import random
-from math import *
+import sys
 from typing import Optional
 
-import ujson
-from vkbottle.bot import Blueprint
 from tortoise import Tortoise
+from vkbottle.bot import Blueprint
 
+from config import MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT
 from global_settings import *
-from models import Conversation, User, GlobalUser, GlobalRole, Work
+from models import Conversation, User, Work
 from rules import *
-
 
 sys.path.append("..")
 bp = Blueprint(name="Working with global admin functions")
@@ -26,7 +24,7 @@ async def send_messages(message: Message, _: Optional[User] = None, text: str = 
     if convs:
         for conv in convs:
             await BOT.api.messages.send(
-                peer_id=conv, random_id=random.randint(-2e9, 2e9), message=text
+                peer_id=conv, random_id=random.randint(MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT), message=text
             )
 
     await message("Выполнено.")
@@ -35,12 +33,15 @@ async def send_messages(message: Message, _: Optional[User] = None, text: str = 
 @bp.on.message_handler(OnlyMaximSend(), text="/получить_себя")
 async def get_myself(message: Message, _: Optional[User] = None):
     conn = Tortoise.get_connection("default")
-    dct = await conn.execute_query_dict(
-        "SELECT * FROM `users` WHERE `user_id` = 500101793"
-    )
+    # TODO: переименовать dct, магически цифры в константу
+    # dct = await conn.execute_query_dict(
+    #    "SELECT * FROM `users` WHERE `user_id` = 500101793"
+    # )
+    dct = await User.get(user_id=500101793)
     await message(dct)
 
 
+# TODO: нужно ли?
 @bp.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
 async def mention_test(message: Message, _: Optional[User] = None, mention: str = None):
     print(mention.split("|")[0][1:])
@@ -53,6 +54,7 @@ async def print_or_count(message: Message, _: Optional[User] = None, text: str =
         text = text.replace(" ", "")
         copied_text = text
 
+        # TODO: в константу в config.py
         allowed_words = []
         allowed_words.extend([str(a) for a in range(10)])
         allowed_words.extend(
@@ -121,18 +123,19 @@ async def print_or_count(message: Message, _: Optional[User] = None, text: str =
             all_good = False
 
         if all_good:
+            # TODO: тесты для проверки евала на безопасность !!!
             summ = eval(text)
             await message(summ)
         else:
             await message(text)
 
-    except ZeroDivisionError as e:
+    except ZeroDivisionError:
         await message("+-inf")
-    except Exception as e:
-        print(e)
+    except Exception:
         await message(text)
 
 
+# TODO: выделить хероту в отдельный метод, который принимает аргументом "роль"
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/снять_модер <mention>", lower=True)
 async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
     if (await is_mention(mention))[0]:
@@ -187,18 +190,20 @@ async def delete_bot_admin(message: Message, _: Optional[User] = None, mention: 
         mention = (await is_mention(mention))[1]
 
     else:
-        await message("Мне нужно упоминание человека, с которого снять модерку!")
+        await message("Мне нужно упоминание человека, с которого снять админку!")
         return
 
     global_role_default = await GlobalRole.get(name="Default")
     await GlobalUser.get(user_id=mention).update(
         global_role=global_role_default
     )
-    await message("Модерка успешно снята!")
+    await message("Админка успешно снята!")
 
 
+# TODO: Выделить в метод два последних содержания
 @bp.on.message_handler(OnlyMaximSend(), text="/бд добавить <model_name> <value>")
 async def add_to_db(message: Message, _: Optional[User] = None, model_name: str = None, value: str = None):
+    # TODO: нормальное приведение строки к словарю
     value = eval(value)
     if model_name == "GlobalRole":
         returnable = await GlobalRole(name=value["name"]).save()
@@ -221,6 +226,7 @@ async def add_to_db(message: Message, _: Optional[User] = None, model_name: str 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд удалить <model> <value>")
 async def delete_from_db(message: Message, _: Optional[User] = None, model: str = None, value: str = None):
     try:
+        # TODO: нормальное приведение строки к словарю
         value = eval(value)
         if model == "GlobalRole":
             await GlobalRole.get(name=value["name"]).delete()
@@ -242,14 +248,10 @@ async def delete_from_db(message: Message, _: Optional[User] = None, model: str 
         await message("Ошибка удаления!")
 
 
-@bp.on.message_handler(OnlyAdminAccess(), OnlyBotAdminAccess(), text="тест", lower=True)
-async def test_message(ans: Message, _: Optional[User] = None):
-    await ans("Привет, чувачелла")
-
-
+# TODO: исправить метод
 @bp.on.message_handler(OnlyBotModerAccess(), text="/доступ", lower=True)
 async def access_message(message: Message, _: Optional[User] = None):
-    global access_for_all
+    global access_for_all  # ?
     access_for_all = not access_for_all
     with open("settings.json", "w") as write_file:
         ujson.dump({"access": access_for_all}, write_file)

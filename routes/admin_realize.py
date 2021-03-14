@@ -66,7 +66,7 @@ async def warn_with_mention_message(message: Message, _: Optional[User] = None, 
         # Checking for count of giving warnings
         if count > 4:
             await message(
-                "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч"
+                "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть"
             )
         else:
             user_mention = await User.get_or_none(
@@ -118,7 +118,7 @@ async def warn_with_reply_message(message: Message, _: Optional[User] = None, co
             # Checking for count of giving warnings
             if count > 4:
                 await message(
-                    "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть, конч админ кароч"
+                    "Да куда ты разогнался, больше 4 варнов кидать чуваку, тут максимум 4 варна есть"
                 )
             else:
                 user_reply = await User.get_or_none(

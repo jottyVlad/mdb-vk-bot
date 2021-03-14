@@ -1,20 +1,15 @@
-import aiohttp
-from aiohttp import web
-from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
-import tortoise
-
 import pathlib
 
-import jinja2
+import aiohttp
 import aiohttp_jinja2
+import jinja2
+import tortoise
+from aiohttp import web
 
-import config
-import tortoise_cfg
-from routes import (actions, admin_realize,
-                    global_admin_realize, users_realize, economic_realize
-                    )
 import global_settings
-from middlewares import ExpMiddleware
+import tortoise_cfg
+from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
+from routes import actions, admin_realize, global_admin_realize, users_realize, economic_realize
 
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent) + '/index_page'
 
