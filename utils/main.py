@@ -52,6 +52,7 @@ async def get_access_for_all() -> bool:
 
 
 async def make_profile_photo(user: User):
+    x, y = START_WRITE_POSITION_X, START_WRITE_POSITION_Y
 
     global_user = await GlobalUser.get_or_none(user_id=user.user_id)
     global_role = await GlobalRole.get(global_userss=global_user.id)
@@ -59,16 +60,16 @@ async def make_profile_photo(user: User):
     img = Image.open('profile_photo.jpg')
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype('Tahoma.ttf', 30)
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Ваш ID: {user.user_id}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Ваша роль: {global_role}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Деньги: {user.coins}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Энергия: {user.energy}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"EXP: {user.exp}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
+    draw.text((x, y), f"Ваш ID: {user.user_id}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"Ваша роль: {global_role}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"Деньги: {user.coins}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"Энергия: {user.energy}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"EXP: {user.exp}", BLACK_COLOR, font=font)
+    y += 35
     job = "безработный"
     if user.work_id_id is not None:
         job = (await Work.get(id=user.work_id_id)).name
@@ -77,9 +78,9 @@ async def make_profile_photo(user: User):
     if user.car_id is not None:
         car = (await Car.get(id=user.car_id)).name
 
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Работа: {job}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Машина: {car}", BLACK_COLOR, font=font)
-    START_WRITE_POSITION_Y += 35
-    draw.text((START_WRITE_POSITION_X, START_WRITE_POSITION_Y), f"Количество предупреждений: {user.warns}", BLACK_COLOR, font=font)
+    draw.text((x, y), f"Работа: {job}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"Машина: {car}", BLACK_COLOR, font=font)
+    y += 35
+    draw.text((x, y), f"Количество предупреждений: {user.warns}", BLACK_COLOR, font=font)
     img.save(f"{user.user_id}.jpeg")
