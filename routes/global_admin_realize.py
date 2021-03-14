@@ -5,10 +5,11 @@ from typing import Optional
 from tortoise import Tortoise
 from vkbottle.bot import Blueprint
 
-from config import MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT
+from utils.consts import MAX_RANDOM_ID_INT, MIN_RANDOM_ID_INT
 from global_settings import *
 from models import Conversation, User, Work
 from rules import *
+from utils.main import is_mention
 
 sys.path.append("..")
 bp = Blueprint(name="Working with global admin functions")
@@ -138,8 +139,8 @@ async def print_or_count(message: Message, _: Optional[User] = None, text: str =
 # TODO: выделить хероту в отдельный метод, который принимает аргументом "роль"
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/снять_модер <mention>", lower=True)
 async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
-    if (await is_mention(mention))[0]:
-        mention = (await is_mention(mention))[1]
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
 
     else:
         await message("Мне нужно упоминание человека, с которого снять модерку!")
@@ -154,8 +155,8 @@ async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = N
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/дать_модер <mention>", lower=True)
 async def give_bot_moder(message: Message, mention: str, _: Optional[User] = None):
-    if (await is_mention(mention))[0]:
-        mention = (await is_mention(mention))[1]
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
 
     else:
         await message("Мне нужно упоминание человека, которому дать права модератора!")
@@ -170,8 +171,8 @@ async def give_bot_moder(message: Message, mention: str, _: Optional[User] = Non
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_админ <mention>", lower=True)
 async def give_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
-    if (await is_mention(mention))[0]:
-        mention = (await is_mention(mention))[1]
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
 
     else:
         await message("Мне нужно упоминание человека, которому дать права модератора!")
@@ -186,8 +187,8 @@ async def give_bot_admin(message: Message, _: Optional[User] = None, mention: st
 
 @bp.on.message_handler(OnlyMaximSend(), text="/снять_админ <mention>", lower=True)
 async def delete_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
-    if (await is_mention(mention))[0]:
-        mention = (await is_mention(mention))[1]
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
 
     else:
         await message("Мне нужно упоминание человека, с которого снять админку!")

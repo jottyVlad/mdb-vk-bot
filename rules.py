@@ -3,7 +3,7 @@ from vkbottle import Message
 from vkbottle.rule import AbstractMessageRule
 
 from config import ACCESS_TOKEN, ADMINS_IN_CONV
-from global_settings import get_access_for_all
+from utils.main import get_access_for_all
 from models import GlobalRole, GlobalUser
 
 bot = Bot(ACCESS_TOKEN)

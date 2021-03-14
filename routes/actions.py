@@ -4,7 +4,7 @@ from typing import Optional
 
 from vkbottle.bot import Blueprint
 
-from config import MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT
+from utils.consts import MAX_RANDOM_ID_INT, MIN_RANDOM_ID_INT
 from global_settings import *
 from models import Conversation, User
 from rules import *
