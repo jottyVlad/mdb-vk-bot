@@ -9,6 +9,7 @@ from vkbottle.bot import Blueprint
 from global_settings import *
 from models import User
 from rules import *
+from utils.main import check_or_create, make_profile_photo
 
 sys.path.append("..")
 bp = Blueprint(name="Working with users functions")

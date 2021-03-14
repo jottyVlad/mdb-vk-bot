@@ -2,7 +2,8 @@ from vkbottle import Message
 from vkbottle.ext import Middleware
 
 from config import NEW_START
-from global_settings import BOT, check_or_create
+from global_settings import BOT
+from utils.main import check_or_create
 from models import Car, User
 
 

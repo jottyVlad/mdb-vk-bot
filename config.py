@@ -14,5 +14,3 @@ CONFIRMATION_TOKEN = os.getenv("CONFIRMATION_TOKEN")
 NEW_START = bool(int(os.getenv("NEW_START", 0)))
 ADMINS_IN_CONV = list(map(int, os.getenv("ADMINS_IN_CONV").split(',')))
 
-MAX_RANDOM_ID_INT = int(2e9)
-MIN_RANDOM_ID_INT = int(-2e9)

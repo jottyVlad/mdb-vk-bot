@@ -6,6 +6,7 @@ from vkbottle.bot import Blueprint
 from global_settings import *
 from models import User
 from rules import *
+from utils.main import is_mention, check_or_create
 
 sys.path.append("..")
 bp = Blueprint(name="Working with admin functions")
@@ -52,8 +53,8 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower=True)
 async def warn_with_mention_message(message: Message, _: Optional[User] = None, mention: str = None, count: str = None):
     # Checking for mention
-    if (await is_mention(mention))[0]:
-        mention = (await is_mention(mention))[1]
+    if (is_mention(mention))[0]:
+        mention = (is_mention(mention))[1]
     else:
         await message("Я не вижу упоминания! Упоминание обязательно!")
         return
