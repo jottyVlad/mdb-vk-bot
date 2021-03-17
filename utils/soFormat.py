@@ -1,17 +1,24 @@
-def convert_datatypes(dictionary: dict) -> dict:
+from typing import Dict, Union
+
+
+def convert_datatypes(dictionary: Dict[str, str]) -> dict:
+    result = {}
     for key, value in dictionary.items():
-        try:
-            dictionary[key] = int(dictionary[key])
-        except ValueError:
-            try:
-                dictionary[key] = float(dictionary[key])
-            except ValueError:
-                pass
+        if dictionary[key].isdigit() \
+                or (dictionary[key][0] == '-' and dictionary[key][1:].isdigit()):
+            result[key] = int(dictionary[key])
 
-    return dictionary
+        elif dictionary[key].count('.') == 1 \
+                and all([a.isdigit() for a in dictionary[key].split('.')]):
+            result[key] = float(dictionary[key])
+
+        else:
+            result[key] = dictionary[key]
+
+    return result
 
 
-def parse(string_to_parse: str) -> dict:
+def parse(string_to_parse: str) -> Dict[str, Union[int, str, float]]:
     data = string_to_parse.split(',')
     result = {}
     for i in data:
@@ -21,3 +28,6 @@ def parse(string_to_parse: str) -> dict:
     result = convert_datatypes(result)
 
     return result
+
+
+print(parse('id: 0, name: Трактор \'Лягушонок\', multiplier: 2, cost: 105.2f, exp_need: 100'))
