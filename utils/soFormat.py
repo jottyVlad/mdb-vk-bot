@@ -28,6 +28,3 @@ def parse(string_to_parse: str) -> Dict[str, Union[int, str, float]]:
     result = convert_datatypes(result)
 
     return result
-
-
-print(parse('id: 0, name: Трактор \'Лягушонок\', multiplier: 2, cost: 105.2f, exp_need: 100'))
