@@ -9,25 +9,11 @@ from vkbottle.bot import Blueprint
 from global_settings import *
 from models import Work, User, Car
 from rules import *
+from utils.consts import CAR_COST_MULTIPLIER
 
 sys.path.append("..")
 
 bp = Blueprint(name="Working with economic system")
-
-
-async def payouts():
-    conn = Tortoise.get_connection("default")
-    time_unix = int(datetime.datetime.now().timestamp() - 86400)
-
-    users = await conn.execute_query_dict(
-        "SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= ?", [time_unix]
-    )
-    for user in users:
-        work = await Work.get(id=user["work_id_id"])
-        await User.get(user_id=user["user_id"], peer_id=user["peer_id"]).update(
-            coins=user["coins"] + work.salary,
-            job_lp=int(datetime.datetime.now().timestamp()),
-        )
 
 
 class PayoutsThread(Thread):
@@ -45,12 +31,26 @@ class PayoutsThread(Thread):
                 continue
 
 
+async def payouts():
+    conn = Tortoise.get_connection("default")
+    time_unix = int(datetime.datetime.now().timestamp() - 86400)
+
+    users = await conn.execute_query_dict(
+        "SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= ?", [time_unix]
+    )
+    for user in users:
+        work = await Work.get(id=user["work_id_id"])
+        await User.get(user_id=user["user_id"], peer_id=user["peer_id"]).update(
+            coins=user["coins"] + work.salary,
+            job_lp=int(datetime.datetime.now().timestamp()),
+        )
+
+
 @bp.on.message_handler(AccessForAllRule(), text="/дать_работу <j_id>")
 async def give_job(message: Message, _: Optional[User] = None, j_id: str = None):
     if j_id.isdigit():
         j_id = int(j_id)
         work = await Work.get(id=j_id)
-        # TODO: затестить
         await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
             work_id=work, job_lp=int(datetime.datetime.now().timestamp())
         )
@@ -105,8 +105,8 @@ async def buy_car(message: Message, user: Optional[User] = None, c_id: str = Non
 async def sell_car(message: Message, user: Optional[User] = None):
     if user.car_id is not None:
         car_cost = (await Car.get(id=user.car_id)).cost
-        # TODO: число 0.1 в константу
-        car_cost = car_cost - (car_cost * 0.1)
+
+        car_cost = car_cost - (car_cost * CAR_COST_MULTIPLIER)
         await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
             coins=user.coins + car_cost, car_id=None
         )

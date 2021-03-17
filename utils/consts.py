@@ -7,6 +7,8 @@ START_WRITE_POSITION_Y = 50
 BLACK_COLOR = (0, 0, 0)
 BOT_CREATOR_ID = 500101793
 
+CAR_COST_MULTIPLIER = 0.1
+
 
 class DatabaseActions(Enum):
     ADD = 0

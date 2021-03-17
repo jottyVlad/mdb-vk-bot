@@ -29,6 +29,8 @@ async def check_or_create(
     return profile, global_profile
 
 
+# TODO: переделать, написать парсер для value, вид value:
+# name: voda, miltiplier: 100, etc.
 async def add_or_remove_model(model_name: str, value: str, action: DatabaseActions) -> str:
     value = await ujson.loads(value.replace("'", '"'))
     returnable = ""
