@@ -8,7 +8,7 @@ from vkbottle.bot import Blueprint
 
 from global_settings import *
 from models import Work, User, Car
-from rules import *
+from utils.rules import *
 from utils.consts import CAR_COST_MULTIPLIER
 
 sys.path.append("..")

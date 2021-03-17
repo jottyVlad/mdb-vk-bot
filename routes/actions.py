@@ -4,7 +4,7 @@ from typing import Optional
 from vkbottle.bot import Blueprint
 
 from models import Conversation, User
-from rules import *
+from utils.rules import *
 
 sys.path.append("..")
 bp = Blueprint(name="Working with actions functions")
