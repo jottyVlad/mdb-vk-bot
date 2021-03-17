@@ -3,7 +3,6 @@ from typing import Optional
 
 from vkbottle.bot import Blueprint
 
-from models import User
 from utils.rules import *
 from utils.errors import WrongWarnsCountException
 from utils.main import get_user_from_mention, give_warns

@@ -5,15 +5,15 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
-import global_settings
+import utils.consts
 from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
 from routes import actions, admin_realize, global_admin_realize, users_realize, economic_realize
 from utils.db_methods import init_database
 
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent) + '/index_page'
 
-global_settings.BOT.loop.run_until_complete(init_database())
-global_settings.BOT.set_blueprints(
+utils.consts.BOT.loop.run_until_complete(init_database())
+utils.consts.BOT.set_blueprints(
     actions.bp, admin_realize.bp, global_admin_realize.bp,
     users_realize.bp, economic_realize.bp
 )
@@ -56,7 +56,7 @@ async def bot_execute(request):
         return web.Response(text=CONFIRMATION_TOKEN)
     else:
         event = await request.json()
-        emulation = await global_settings.BOT.emulate(event, confirmation_token=CONFIRMATION_TOKEN, secret=SECRET)
+        emulation = await utils.consts.BOT.emulate(event, confirmation_token=CONFIRMATION_TOKEN, secret=SECRET)
         return web.Response(text=emulation)
 
 

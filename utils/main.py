@@ -6,10 +6,9 @@ from PIL import Image, ImageDraw, ImageFont
 from vkbottle.types.message import Message
 
 from config import ADMINS_IN_CONV
-from global_settings import USER, BOT
 from models import User, GlobalUser, GlobalRole, Work, Car
 from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
-    MAX_RANDOM_ID_INT, BuyCarUserStatuses
+    MAX_RANDOM_ID_INT, BuyCarUserStatuses, BOT, USER
 from utils.db_methods import check_or_create
 from utils.errors import WrongWarnsCountException
 

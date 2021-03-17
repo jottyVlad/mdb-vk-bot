@@ -6,9 +6,9 @@ import numexpr as ne
 import ujson
 from vkbottle.bot import Blueprint
 
-from models import Conversation, User
+from models import Conversation
 from utils.rules import *
-from utils.consts import MAX_RANDOM_ID_INT, MIN_RANDOM_ID_INT, DatabaseActions, BOT_CREATOR_ID, AccessingLevels
+from utils.consts import MAX_RANDOM_ID_INT, MIN_RANDOM_ID_INT, DatabaseActions, BOT_CREATOR_ID, AccessingLevels, BOT
 from utils.db_methods import add_or_remove_model, give_or_take_access
 from utils.errors import DatabaseDeleteException, DatabaseAddException, ParseMentionException
 
