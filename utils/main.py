@@ -9,7 +9,6 @@ from config import ADMINS_IN_CONV
 from models import User, GlobalUser, GlobalRole, Work, Car
 from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
     MAX_RANDOM_ID_INT, BuyCarUserStatuses, BOT, USER
-from utils.db_methods import check_or_create
 from utils.errors import WrongWarnsCountException
 
 
@@ -152,3 +151,24 @@ def status_on_buy_car(user: User, car: Car) -> BuyCarUserStatuses:
         return BuyCarUserStatuses.NOT_ENOUGH_EXP
     else:
         return BuyCarUserStatuses.NOW_HAVE_CAR
+
+
+async def check_or_create(
+        user_id: int, peer_id: int, warns: int = 0
+) -> typing.Tuple[User, GlobalUser]:
+    """
+    check for user in current chat
+    and global user in database
+    """
+    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
+    if profile is None:
+        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
+        profile = await User.get(user_id=user_id, peer_id=peer_id)
+
+    global_profile = await GlobalUser.get_or_none(user_id=user_id)
+    if global_profile is None:
+        default_role = await GlobalRole.get(name="Default")
+        await GlobalUser(user_id=user_id, global_role=default_role).save()
+        global_profile = GlobalUser.get(user_id=user_id)
+
+    return profile, global_profile

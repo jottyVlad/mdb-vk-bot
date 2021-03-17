@@ -8,8 +8,7 @@ from vkbottle.bot import Blueprint
 
 from global_settings import *
 from utils.rules import *
-from utils.db_methods import check_or_create
-from utils.main import make_profile_photo, send_with_bomb, create_poll, is_replied_self
+from utils.main import make_profile_photo, send_with_bomb, create_poll, is_replied_self, check_or_create
 
 sys.path.append("..")
 bp = Blueprint(name="Working with users functions")

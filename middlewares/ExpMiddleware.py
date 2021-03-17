@@ -4,7 +4,7 @@ from vkbottle.ext import Middleware
 from config import NEW_START
 from utils.consts import BOT
 from models import Car, User
-from utils.db_methods import check_or_create
+from utils.main import check_or_create
 
 
 @BOT.middleware.middleware_handler()
