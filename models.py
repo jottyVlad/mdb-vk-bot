@@ -7,7 +7,6 @@ class User(Model):
     user_id = fields.IntField()
     chat = fields.ForeignKeyField('models.Conversation', related_name="chat")
     coins = fields.IntField(default=100)
-    energy = fields.IntField(default=4)
     warns = fields.IntField(default=0)
     exp = fields.IntField(default=0)
     work_id = fields.ForeignKeyField("models.Work", related_name="work_id", null=True)

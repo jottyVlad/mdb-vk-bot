@@ -18,3 +18,10 @@ class DatabaseActions(Enum):
 class AccessingLevels(Enum):
     MODERATOR = "Модерка"
     ADMINISTRATOR = "Администраторка"
+
+
+class BuyCarUserStatuses(Enum):
+    APPROVED = 0
+    NOT_ENOUGH_MONEY = 1
+    NOT_ENOUGH_EXP = 2
+    NOW_HAVE_CAR = 3

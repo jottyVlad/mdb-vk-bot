@@ -8,42 +8,13 @@ from vkbottle.bot import Blueprint
 
 from global_settings import *
 from models import Work, User, Car
+from utils.main import status_on_buy_car
 from utils.rules import *
-from utils.consts import CAR_COST_MULTIPLIER
+from utils.consts import CAR_COST_MULTIPLIER, BuyCarUserStatuses
 
 sys.path.append("..")
 
 bp = Blueprint(name="Working with economic system")
-
-
-class PayoutsThread(Thread):
-    def __init__(self):
-        Thread.__init__(self)
-
-    def run(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        while True:
-            try:
-                loop.run_until_complete(payouts())
-                loop.run_until_complete(asyncio.sleep(15))
-            except Exception as _:
-                continue
-
-
-async def payouts():
-    conn = Tortoise.get_connection("default")
-    time_unix = int(datetime.datetime.now().timestamp() - 86400)
-
-    users = await conn.execute_query_dict(
-        "SELECT * FROM `users` WHERE `work_id_id` IS NOT NULL AND `job_lp` IS NOT NULL AND `job_lp` <= ?", [time_unix]
-    )
-    for user in users:
-        work = await Work.get(id=user["work_id_id"])
-        await User.get(user_id=user["user_id"], peer_id=user["peer_id"]).update(
-            coins=user["coins"] + work.salary,
-            job_lp=int(datetime.datetime.now().timestamp()),
-        )
 
 
 @bp.on.message_handler(AccessForAllRule(), text="/дать_работу <j_id>")
@@ -57,6 +28,24 @@ async def give_job(message: Message, _: Optional[User] = None, j_id: str = None)
         await message("Работа выдана!")
     else:
         await message("Введите число!")
+
+
+@bp.on.message_handler(AccessForAllRule(), text="/получить_зп")
+async def take_salary(message: Message, user: Optional[User] = None):
+    if user.work_id is not None:
+        if user.job_lp <= int(datetime.datetime.now().timestamp() - 86400):
+            work = await Work.get(id=user.work_id)
+            await User.get(user_id=user.user_id, peer_id=user.chat).update(
+                coins=user.coins + work.salary,
+                job_lp=int(datetime.datetime.now().timestamp()),
+            )
+
+            await message("Зарплата выдана!")
+        else:
+            await message(f"Осталось до получения зарплаты: "
+                          f"{user.job_lp + 86400 - datetime.datetime.now().timestamp()}")
+    else:
+        await message("У вас нет работы!")
 
 
 @bp.on.message_handler(text="/список_работ")
@@ -85,15 +74,17 @@ async def buy_car(message: Message, user: Optional[User] = None, c_id: str = Non
         c_id = int(c_id)
         car = await Car.get(id=c_id)
 
-        if user.coins >= car.cost and user.exp >= car.exp_need and user.car_id is None:
+        buy_car_user_status = status_on_buy_car(user, car)
+
+        if buy_car_user_status == BuyCarUserStatuses.APPROVED:
             await User.get(user_id=message.from_id, peer_id=message.peer_id).update(
                 coins=user.coins - car.cost, car=car
             )
-            # TODO: рассмотреть возможность вынести проверку в отдельный метод
+
             await message(f"Машина {car} куплена!")
-        elif user.coins < car.cost:
+        elif buy_car_user_status == BuyCarUserStatuses.NOT_ENOUGH_MONEY:
             await message("У тебя недостаточно денег!")
-        elif user.exp < car.exp_need:
+        elif buy_car_user_status == BuyCarUserStatuses.NOT_ENOUGH_EXP:
             await message("У тебя недостаточно опыта!")
         else:
             await message("У тебя уже есть машина!")

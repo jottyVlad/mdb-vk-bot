@@ -1,11 +1,13 @@
 import typing
 
-import ujson
+import tortoise
 
+import tortoise_cfg
 from models import User, GlobalUser, GlobalRole, Conversation, Work, Car
 from utils.consts import DatabaseActions, AccessingLevels
 from utils.errors import DatabaseDeleteException, DatabaseAddException, ParseMentionException
 from utils.main import get_user_from_mention
+from utils.soFormat import parse
 
 
 async def check_or_create(
@@ -29,10 +31,8 @@ async def check_or_create(
     return profile, global_profile
 
 
-# TODO: переделать, написать парсер для value, вид value:
-# name: voda, miltiplier: 100, etc.
 async def add_or_remove_model(model_name: str, value: str, action: DatabaseActions) -> str:
-    value = await ujson.loads(value.replace("'", '"'))
+    value = parse(value)
     returnable = ""
     if action == DatabaseActions.ADD:
         if model_name == "GlobalRole":
@@ -101,3 +101,11 @@ async def give_or_take_access(level_access: AccessingLevels, action: DatabaseAct
             )
 
         return f"{level_access.name} успешно выдана!"
+
+
+async def init_database():
+    """
+    Init database
+    """
+    await tortoise.Tortoise.init(config=tortoise_cfg.TORTOISE_ORM)
+    await tortoise.Tortoise.generate_schemas()

@@ -3,7 +3,7 @@ from vkbottle.rule import AbstractMessageRule
 
 from config import ADMINS_IN_CONV
 from global_settings import BOT
-from models import GlobalRole, GlobalUser
+from models import GlobalRole, GlobalUser, User
 from utils.main import get_access_for_all
 
 
@@ -74,3 +74,4 @@ class AccessForBotAdminAndSenderAdminOrConv(AbstractMessageRule):
                           "администратора!")
 
         return False
+

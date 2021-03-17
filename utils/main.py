@@ -9,7 +9,7 @@ from config import ADMINS_IN_CONV
 from global_settings import USER, BOT
 from models import User, GlobalUser, GlobalRole, Work, Car
 from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
-    MAX_RANDOM_ID_INT
+    MAX_RANDOM_ID_INT, BuyCarUserStatuses
 from utils.db_methods import check_or_create
 from utils.errors import WrongWarnsCountException
 
@@ -51,8 +51,6 @@ async def make_profile_photo(user: User):
     draw.text((x, y), f"Ваша роль: {global_role}", BLACK_COLOR, font=font)
     y += 35
     draw.text((x, y), f"Деньги: {user.coins}", BLACK_COLOR, font=font)
-    y += 35
-    draw.text((x, y), f"Энергия: {user.energy}", BLACK_COLOR, font=font)
     y += 35
     draw.text((x, y), f"EXP: {user.exp}", BLACK_COLOR, font=font)
     y += 35
@@ -144,3 +142,14 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
 
         else:
             raise WrongWarnsCountException("Wrong count of giving warns")
+
+
+def status_on_buy_car(user: User, car: Car) -> BuyCarUserStatuses:
+    if user.coins >= car.cost and user.exp >= car.exp_need and user.car_id is None:
+        return BuyCarUserStatuses.APPROVED
+    elif user.coins < car.cost:
+        return BuyCarUserStatuses.NOT_ENOUGH_MONEY
+    elif user.exp < car.exp_need:
+        return BuyCarUserStatuses.NOT_ENOUGH_EXP
+    else:
+        return BuyCarUserStatuses.NOW_HAVE_CAR
