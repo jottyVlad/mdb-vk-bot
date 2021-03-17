@@ -18,9 +18,6 @@ global_settings.BOT.set_blueprints(
     users_realize.bp, economic_realize.bp
 )
 
-THREAD = economic_realize.PayoutsThread()
-THREAD.start()
-
 APP = aiohttp.web.Application()
 ROUTES = aiohttp.web.RouteTableDef()
 
