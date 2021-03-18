@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 from vkbottle.types.message import Message
 
 from config import ADMINS_IN_CONV
-from models import User, GlobalUser, GlobalRole, Work, Car
+from models import User, GlobalUser, GlobalRole, Work, Car, Conversation
 from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
     MAX_RANDOM_ID_INT, BuyCarUserStatuses, BOT, USER
 from utils.errors import WrongWarnsCountException
@@ -52,13 +52,14 @@ async def make_profile_photo(user: User):
     y += 35
     draw.text((x, y), f"EXP: {user.exp}", BLACK_COLOR, font=font)
     y += 35
+
     job = "безработный"
-    if user.work_id_id is not None:
-        job = (await Work.get(id=user.work_id_id)).name
+    if await user.work is not None:
+        job = (await user.work).name
 
     car = "отсутствует"
-    if user.car_id is not None:
-        car = (await Car.get(id=user.car_id)).name
+    if await user.car is not None:
+        car = (await user.car).name
 
     draw.text((x, y), f"Работа: {job}", BLACK_COLOR, font=font)
     y += 35
@@ -122,7 +123,8 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
     if user is None:
         if 4 >= count >= 0:
             await check_or_create(message.from_id, message.peer_id, count)
-            user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
+            chat = await Conversation.get(peer_id=message.peer_id)
+            user = await User.get(user_id=message.from_id, chat=chat)
             return user
 
         else:
@@ -130,11 +132,12 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
 
     else:
         if 4 >= user.warns + count >= 0:
+            chat = await Conversation.get(peer_id=message.peer_id)
             await User.get(
-                user_id=user.user_id, peer_id=message.peer_id
+                user_id=user.user_id, chat=chat
             ).update(warns=user.warns + count)
 
-            user = await User.get(user_id=user.user_id, peer_id=message.peer_id)
+            user = await User.get(user_id=user.user_id, chat=chat)
 
             return user
 
@@ -143,7 +146,7 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
 
 
 def status_on_buy_car(user: User, car: Car) -> BuyCarUserStatuses:
-    if user.coins >= car.cost and user.exp >= car.exp_need and user.car_id is None:
+    if user.coins >= car.cost and user.exp >= car.exp_need and user.car is None:
         return BuyCarUserStatuses.APPROVED
     elif user.coins < car.cost:
         return BuyCarUserStatuses.NOT_ENOUGH_MONEY
@@ -160,10 +163,15 @@ async def check_or_create(
     check for user in current chat
     and global user in database
     """
-    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
+    chat = await Conversation.get_or_none(peer_id=peer_id)
+
+    if chat is None:
+        chat = await Conversation.create(peer_id=peer_id)
+
+    profile = await User.get_or_none(user_id=user_id, chat=chat)
     if profile is None:
-        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
-        profile = await User.get(user_id=user_id, peer_id=peer_id)
+        await User(user_id=user_id, chat=chat, warns=warns).save()
+        profile = await User.get(user_id=user_id, chat=chat)
 
     global_profile = await GlobalUser.get_or_none(user_id=user_id)
     if global_profile is None:

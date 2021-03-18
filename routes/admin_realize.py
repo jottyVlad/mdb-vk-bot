@@ -3,16 +3,16 @@ from typing import Optional
 
 from vkbottle.bot import Blueprint
 
-from utils.rules import *
 from utils.errors import WrongWarnsCountException
 from utils.main import get_user_from_mention, give_warns
+from utils.rules import *
 
 sys.path.append("..")
 bp = Blueprint(name="Working with admin functions")
 
 
 @bp.on.message_handler(OnlyAdminAccess(), AccessForBotAdmin(), text="бан", lower=True)
-async def bot_ban_message(message: Message, _: Optional[User] = None):
+async def bot_ban_message(message: Message):
     if message.reply_message:
         await message(
             f"ПОДТВЕРДИТЕ БАН ПОЛЬЗОВАТЕЛЯ С ID {message.reply_message.from_id}! НАПИШИТЕ 'ЗАБАНИТЬ' (ЗАГЛАВНЫМИ "
@@ -51,7 +51,7 @@ async def bot_ban_branch(message: Message, user_id, admin_id):
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <mention> <count>", lower=True)
-async def warn_with_mention_message(message: Message, _: Optional[User] = None, mention: str = None, count: str = None):
+async def warn_with_mention_message(message: Message, mention: str = None, count: str = None):
     mention = get_user_from_mention(mention)
     if not mention:
         await message("Упоминание обязательно")
@@ -60,7 +60,8 @@ async def warn_with_mention_message(message: Message, _: Optional[User] = None, 
     try:
         count = int(count)
 
-        user = await User.get_or_none(user_id=mention, peer_id=message.peer_id)
+        chat = await Conversation.get(peer_id=message.peer_id)
+        user = await User.get_or_none(user_id=mention, chat=chat)
         await give_warns(message, user, count)
 
     except ValueError:
@@ -71,7 +72,7 @@ async def warn_with_mention_message(message: Message, _: Optional[User] = None, 
 
 
 @bp.on.chat_message(OnlyAdminAccess(), text="/пред <count>", lower=True)
-async def warn_with_reply_message(message: Message, _: Optional[User] = None, count: str = None):
+async def warn_with_reply_message(message: Message, count: str = None):
     if not message.reply_message:
         await message("Отвеченное сообщение обязательно")
         return None
@@ -79,7 +80,8 @@ async def warn_with_reply_message(message: Message, _: Optional[User] = None, co
     try:
         count = int(count)
 
-        user = await User.get_or_none(user_id=message.reply_message.from_id, peer_id=message.peer_id)
+        chat = await Conversation.get(peer_id=message.peer_id)
+        user = await User.get_or_none(user_id=message.reply_message.from_id, chat=chat)
         await give_warns(message, user, count)
 
     except ValueError:

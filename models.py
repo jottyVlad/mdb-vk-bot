@@ -9,7 +9,7 @@ class User(Model):
     coins = fields.IntField(default=100)
     warns = fields.IntField(default=0)
     exp = fields.IntField(default=0)
-    work_id = fields.ForeignKeyField("models.Work", related_name="work_id", null=True)
+    work = fields.ForeignKeyField("models.Work", related_name="work", null=True)
     job_lp = fields.BigIntField(null=True)
     car = fields.ForeignKeyField("models.Car", related_name="car", null=True)
 

@@ -3,7 +3,7 @@ from vkbottle.rule import AbstractMessageRule
 
 from config import ADMINS_IN_CONV
 from utils.consts import BOT
-from models import GlobalRole, GlobalUser, User
+from models import GlobalRole, GlobalUser, User, Conversation
 from utils.main import get_access_for_all
 
 
@@ -75,3 +75,9 @@ class AccessForBotAdminAndSenderAdminOrConv(AbstractMessageRule):
 
         return False
 
+
+class Registered(AbstractMessageRule):
+    async def check(self, message: Message):
+        self.context.kwargs['user'] = await User.get(user_id=message.from_id,
+                                                     chat=(await Conversation.get(peer_id=message.peer_id)))
+        return True
