@@ -85,7 +85,7 @@ async def send_with_bomb(text: str, peer_id: int, **kwargs):
             "message": text,
             "group_id": BOT.group_id,
             "peer_id": peer_id,
-            "expire_ttl": kwargs['ttl'] | "20",
+            "expire_ttl": kwargs['ttl'] if 'ttl' in kwargs.keys() else "20",
             "random_id": random.randint(MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT),
         },
     )

@@ -61,4 +61,4 @@ async def bot_execute(request):
 
 
 APP.add_routes(ROUTES)
-web.run_app(APP, host="0.0.0.0", port=80)
+web.run_app(APP, host="127.0.0.1", port=8000)
