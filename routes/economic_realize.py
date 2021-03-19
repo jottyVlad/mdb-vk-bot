@@ -21,7 +21,7 @@ async def give_job(message: Message, user: User, j_id: str = None):
         work = await Work.get(id=j_id)
         chat = await Conversation.get(peer_id=message.peer_id)
         await User.get(user_id=user.user_id, chat=chat).update(
-            work=work, job_lp=int(datetime.datetime.now().timestamp())
+            work=work, job_lp=datetime.datetime.now()
         )
         await message("Работа выдана!")
     else:
@@ -30,18 +30,21 @@ async def give_job(message: Message, user: User, j_id: str = None):
 
 @bp.on.message_handler(AccessForAllRule(), Registered(), text="/получить_зп")
 async def take_salary(message: Message, user: User):
-    if user.work is not None:
-        if user.job_lp <= int(datetime.datetime.now().timestamp() - 1):
+    if (await user.work) is not None:
+        if user.job_lp.timestamp() <= (datetime.datetime.now() - datetime.timedelta(0, 0, 0, 0, 0, 24)).timestamp():
             work = await Work.get(id=(await user.work).id)
-            await User.get(user_id=user.user_id, peer_id=user.chat).update(
+            await User.get(user_id=user.user_id, chat=(await user.chat)).update(
                 coins=user.coins + work.salary,
-                job_lp=int(datetime.datetime.now().timestamp()),
+                job_lp=datetime.datetime.now(),
             )
 
             await message("Зарплата выдана!")
         else:
-            await message(f"Осталось до получения зарплаты: "
-                          f"{user.job_lp + 86400 - datetime.datetime.now().timestamp()}")
+            time = datetime.datetime(user.job_lp.year, user.job_lp.month, user.job_lp.day,
+                                     user.job_lp.hour, user.job_lp.minute, user.job_lp.second,
+                                     user.job_lp.microsecond) - \
+                   (datetime.datetime.now() + datetime.timedelta(0, 0, 0, 0, 0, 24))
+            await message(f"Осталось до получения зарплаты: {str(time).split(', ')[1].split('.')[0]}")
     else:
         await message("У вас нет работы!")
 

@@ -10,7 +10,7 @@ class User(Model):
     warns = fields.IntField(default=0)
     exp = fields.IntField(default=0)
     work = fields.ForeignKeyField("models.Work", related_name="work", null=True)
-    job_lp = fields.BigIntField(null=True)
+    job_lp = fields.DatetimeField(null=True)
     car = fields.ForeignKeyField("models.Car", related_name="car", null=True)
 
     class Meta:

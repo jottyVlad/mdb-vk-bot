@@ -9,6 +9,7 @@ import utils.consts
 from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
 from routes import actions, admin_realize, global_admin_realize, users_realize, economic_realize
 from utils.db_methods import init_database
+from middlewares import ExpMiddleware # dead import for include middleware
 
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent) + '/index_page'
 

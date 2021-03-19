@@ -3,7 +3,7 @@ from vkbottle.ext import Middleware
 
 from config import NEW_START
 from utils.consts import BOT
-from models import Car, User
+from models import Car, User, Conversation
 from utils.main import check_or_create
 
 
@@ -21,11 +21,7 @@ class ExpMiddleware(Middleware):
                 msg = [a for a in message.text]
                 msg = [a for a in msg if a != " "]
                 exps = 2 * len(msg) * multiplier
+                chat = await Conversation.get(peer_id=message.peer_id)
                 await User.get(
-                    user_id=message.from_id, peer_id=message.peer_id
+                    user_id=message.from_id, chat=chat
                 ).update(exp=exps + user.exp)
-
-            user = (await check_or_create(message.from_id, message.peer_id))[0]
-            return user
-
-        return None
