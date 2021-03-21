@@ -17,7 +17,7 @@ bp = Blueprint(name="Working with global admin functions")
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/разослать <text>", lower=True)
-async def send_messages(message: Message, _: Optional[User] = None, text: str = None):
+async def send_messages(message: Message, text: str = None):
     await BOT.api.request(
         "messages.markAsRead",
         {"peer_id": message.peer_id, "mark_conversation_as_read": "1"},
@@ -33,20 +33,20 @@ async def send_messages(message: Message, _: Optional[User] = None, text: str = 
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/получить_себя")
-async def get_myself(message: Message, _: Optional[User] = None):
+async def get_myself(message: Message):
     user = str(await User.get(user_id=BOT_CREATOR_ID))
     await message(user)
 
 
 # NOTE: нужно ли?
 @bp.on.message_handler(OnlyBotModerAccess(), text="/mention <mention>", lower=True)
-async def mention_test(message: Message, _: Optional[User] = None, mention: str = None):
+async def mention_test(message: Message, mention: str = None):
     # print(mention.split("|")[0][1:])
     await message("[id{0}|Maxim]".format(message.from_id))
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="~ <text>", lower=True)
-async def print_or_count(message: Message, _: Optional[User] = None, text: str = None):
+async def print_or_count(message: Message, text: str = None):
     try:
         summ = ne.evaluate(text).item()
         await message(summ)
@@ -58,7 +58,7 @@ async def print_or_count(message: Message, _: Optional[User] = None, text: str =
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/снять_модер <mention>", lower=True)
-async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = None):
+async def delete_bot_moder(message: Message, mention: str):
     try:
         result = await give_or_take_access(AccessingLevels.MODERATOR, DatabaseActions.REMOVE, mention)
     except ParseMentionException:
@@ -68,7 +68,7 @@ async def delete_bot_moder(message: Message, mention: str, _: Optional[User] = N
 
 
 @bp.on.message_handler(OnlyBotAdminAccess(), text="/дать_модер <mention>", lower=True)
-async def give_bot_moder(message: Message, mention: str, _: Optional[User] = None):
+async def give_bot_moder(message: Message, mention: str):
     try:
         result = await give_or_take_access(AccessingLevels.MODERATOR, DatabaseActions.ADD, mention)
     except ParseMentionException:
@@ -78,7 +78,7 @@ async def give_bot_moder(message: Message, mention: str, _: Optional[User] = Non
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/дать_админ <mention>", lower=True)
-async def give_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
+async def give_bot_admin(message: Message, mention: str = None):
     try:
         result = await give_or_take_access(AccessingLevels.ADMINISTRATOR, DatabaseActions.ADD, mention)
     except ParseMentionException:
@@ -88,7 +88,7 @@ async def give_bot_admin(message: Message, _: Optional[User] = None, mention: st
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/снять_админ <mention>", lower=True)
-async def delete_bot_admin(message: Message, _: Optional[User] = None, mention: str = None):
+async def delete_bot_admin(message: Message, mention: str = None):
     try:
         result = await give_or_take_access(AccessingLevels.ADMINISTRATOR, DatabaseActions.REMOVE, mention)
     except ParseMentionException:
@@ -98,7 +98,7 @@ async def delete_bot_admin(message: Message, _: Optional[User] = None, mention: 
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд добавить <model_name> <value>")
-async def add_to_db(message: Message, _: Optional[User] = None, model_name: str = None, value: str = None):
+async def add_to_db(message: Message, model_name: str = None, value: str = None):
     try:
         result = await add_or_remove_model(model_name, value, DatabaseActions.ADD)
     except DatabaseAddException:
@@ -108,7 +108,7 @@ async def add_to_db(message: Message, _: Optional[User] = None, model_name: str 
 
 
 @bp.on.message_handler(OnlyMaximSend(), text="/бд удалить <model_name> <value>")
-async def delete_from_db(message: Message, _: Optional[User] = None, model_name: str = None, value: str = None):
+async def delete_from_db(message: Message, model_name: str = None, value: str = None):
     try:
         result = await add_or_remove_model(model_name, value, DatabaseActions.REMOVE)
     except DatabaseDeleteException:
@@ -118,7 +118,7 @@ async def delete_from_db(message: Message, _: Optional[User] = None, model_name:
 
 
 @bp.on.message_handler(OnlyBotModerAccess(), text="/доступ", lower=True)
-async def access_message(message: Message, _: Optional[User] = None):
+async def access_message(message: Message):
     access_for_all: bool = await get_access_for_all()
     access_for_all = not access_for_all
     with open("../settings.json", "w") as write_file:

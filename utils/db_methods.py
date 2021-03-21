@@ -1,5 +1,3 @@
-import typing
-
 import tortoise
 
 import tortoise_cfg
@@ -8,27 +6,6 @@ from utils.consts import DatabaseActions, AccessingLevels
 from utils.errors import DatabaseDeleteException, DatabaseAddException, ParseMentionException
 from utils.main import get_user_from_mention
 from utils.soFormat import parse
-
-
-async def check_or_create(
-        user_id: int, peer_id: int, warns: int = 0
-) -> typing.Tuple[User, GlobalUser]:
-    """
-    check for user in current chat
-    and global user in database
-    """
-    profile = await User.get_or_none(user_id=user_id, peer_id=peer_id)
-    if profile is None:
-        await User(user_id=user_id, peer_id=peer_id, warns=warns).save()
-        profile = await User.get(user_id=user_id, peer_id=peer_id)
-
-    global_profile = await GlobalUser.get_or_none(user_id=user_id)
-    if global_profile is None:
-        default_role = await GlobalRole.get(name="Default")
-        await GlobalUser(user_id=user_id, global_role=default_role).save()
-        global_profile = GlobalUser.get(user_id=user_id)
-
-    return profile, global_profile
 
 
 async def add_or_remove_model(model_name: str, value: str, action: DatabaseActions) -> str:

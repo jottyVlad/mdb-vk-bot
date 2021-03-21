@@ -6,10 +6,9 @@ from PIL import Image, ImageDraw, ImageFont
 from vkbottle.types.message import Message
 
 from config import ADMINS_IN_CONV
-from models import User, GlobalUser, GlobalRole, Work, Car
+from models import User, GlobalUser, GlobalRole, Work, Car, Conversation
 from utils.consts import START_WRITE_POSITION_X, START_WRITE_POSITION_Y, BLACK_COLOR, MIN_RANDOM_ID_INT, \
     MAX_RANDOM_ID_INT, BuyCarUserStatuses, BOT, USER
-from utils.db_methods import check_or_create
 from utils.errors import WrongWarnsCountException
 
 
@@ -53,13 +52,14 @@ async def make_profile_photo(user: User):
     y += 35
     draw.text((x, y), f"EXP: {user.exp}", BLACK_COLOR, font=font)
     y += 35
+
     job = "безработный"
-    if user.work_id_id is not None:
-        job = (await Work.get(id=user.work_id_id)).name
+    if await user.work is not None:
+        job = (await user.work).name
 
     car = "отсутствует"
-    if user.car_id is not None:
-        car = (await Car.get(id=user.car_id)).name
+    if await user.car is not None:
+        car = (await user.car).name
 
     draw.text((x, y), f"Работа: {job}", BLACK_COLOR, font=font)
     y += 35
@@ -86,7 +86,7 @@ async def send_with_bomb(text: str, peer_id: int, **kwargs):
             "message": text,
             "group_id": BOT.group_id,
             "peer_id": peer_id,
-            "expire_ttl": kwargs['ttl'] | "20",
+            "expire_ttl": kwargs['ttl'] if 'ttl' in kwargs.keys() else "20",
             "random_id": random.randint(MIN_RANDOM_ID_INT, MAX_RANDOM_ID_INT),
         },
     )
@@ -123,7 +123,8 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
     if user is None:
         if 4 >= count >= 0:
             await check_or_create(message.from_id, message.peer_id, count)
-            user = await User.get(user_id=message.from_id, peer_id=message.peer_id)
+            chat = await Conversation.get(peer_id=message.peer_id)
+            user = await User.get(user_id=message.from_id, chat=chat)
             return user
 
         else:
@@ -131,11 +132,12 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
 
     else:
         if 4 >= user.warns + count >= 0:
+            chat = await Conversation.get(peer_id=message.peer_id)
             await User.get(
-                user_id=user.user_id, peer_id=message.peer_id
+                user_id=user.user_id, chat=chat
             ).update(warns=user.warns + count)
 
-            user = await User.get(user_id=user.user_id, peer_id=message.peer_id)
+            user = await User.get(user_id=user.user_id, chat=chat)
 
             return user
 
@@ -144,7 +146,7 @@ async def give_warns(message: Message, user: typing.Optional[User], count: int) 
 
 
 def status_on_buy_car(user: User, car: Car) -> BuyCarUserStatuses:
-    if user.coins >= car.cost and user.exp >= car.exp_need and user.car_id is None:
+    if user.coins >= car.cost and user.exp >= car.exp_need and user.car is None:
         return BuyCarUserStatuses.APPROVED
     elif user.coins < car.cost:
         return BuyCarUserStatuses.NOT_ENOUGH_MONEY
@@ -152,3 +154,29 @@ def status_on_buy_car(user: User, car: Car) -> BuyCarUserStatuses:
         return BuyCarUserStatuses.NOT_ENOUGH_EXP
     else:
         return BuyCarUserStatuses.NOW_HAVE_CAR
+
+
+async def check_or_create(
+        user_id: int, peer_id: int, warns: int = 0
+) -> typing.Tuple[User, GlobalUser]:
+    """
+    check for user in current chat
+    and global user in database
+    """
+    chat = await Conversation.get_or_none(peer_id=peer_id)
+
+    if chat is None:
+        chat = await Conversation.create(peer_id=peer_id)
+
+    profile = await User.get_or_none(user_id=user_id, chat=chat)
+    if profile is None:
+        await User(user_id=user_id, chat=chat, warns=warns).save()
+        profile = await User.get(user_id=user_id, chat=chat)
+
+    global_profile = await GlobalUser.get_or_none(user_id=user_id)
+    if global_profile is None:
+        default_role = await GlobalRole.get(name="Default")
+        await GlobalUser(user_id=user_id, global_role=default_role).save()
+        global_profile = GlobalUser.get(user_id=user_id)
+
+    return profile, global_profile

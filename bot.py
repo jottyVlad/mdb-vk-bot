@@ -9,6 +9,7 @@ import utils.consts
 from config import SECRET, WEBHOOK_ACCEPT, CONFIRMATION_TOKEN
 from routes import actions, admin_realize, global_admin_realize, users_realize, economic_realize
 from utils.db_methods import init_database
+from middlewares import ExpMiddleware # dead import for include middleware
 
 INDEX_DIR = str(pathlib.Path(__file__).resolve().parent) + '/index_page'
 
@@ -61,4 +62,4 @@ async def bot_execute(request):
 
 
 APP.add_routes(ROUTES)
-web.run_app(APP, host="0.0.0.0", port=80)
+web.run_app(APP, host="127.0.0.1", port=8000)
