@@ -58,6 +58,7 @@ class Work(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=256)
     salary = fields.IntField()
+    exp_need = fields.IntField(default=100)
 
     class Meta:
         table = "works"

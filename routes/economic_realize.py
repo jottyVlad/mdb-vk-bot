@@ -19,11 +19,14 @@ async def give_job(message: Message, user: User, j_id: str = None):
     if j_id.isdigit():
         j_id = int(j_id)
         work = await Work.get(id=j_id)
-        chat = await Conversation.get(peer_id=message.peer_id)
-        await User.get(user_id=user.user_id, chat=chat).update(
-            work=work, job_lp=datetime.datetime.now()
-        )
-        await message("Работа выдана!")
+        if user.exp > work.exp_need:
+            chat = await Conversation.get(peer_id=message.peer_id)
+            await User.get(user_id=user.user_id, chat=chat).update(
+                work=work, job_lp=datetime.datetime.now()
+            )
+            await message("Работа выдана!")
+        else:
+            await message("У вас недостаточно опыта!")
     else:
         await message("Введите число!")
 
@@ -54,7 +57,7 @@ async def job_list(message: Message):
     jobs = await Work.all()
     await message(
         "\n".join(
-            [f"ID: {job.id}; Название: {job.name}; ЗП: {job.salary}" for job in jobs]
+            [f"ID: {job.id}; Название: {job.name}; ЗП: {job.salary}; Требуемый опыт: {job.exp_need}" for job in jobs]
         )
     )
 
