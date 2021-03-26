@@ -20,13 +20,13 @@
 2. Кидаем его в папку с ботом.
 3. Создаём в папке с ботом виртуальное окружение (python -m virtualenv venv) и входим в него (на Linux: ./venv/bin/activate, на Win: cd ./venv/Scripts && .\activate.bat)
 4. Создаём в папке с ботом файл .env, в котором заполняем:
-    4.1. SECRET=секретный_ключ_callbackAPI_в_настройках_группы.
-    4.2. ACCESS_TOKEN=access_token_в_настройках_api_группы.
-    4.3. USER_ACCESS_TOKEN=user_access_token, получаем его тут: https://vkhost.github.io/, выбираем VK ME.
-    4.4. CONFIRMATION_TOKEN=то_что_должен_вернуть_сайт_при_подтверждении_адреса.
-    4.5. ADMINS_IN_CONV=444944367,10885998,26211044,500101793 просто оставьте так =)
-    4.6. WEBHOOK_ACCEPT=1
-    4.7. NEW_START=1
+    1. SECRET=секретный_ключ_callbackAPI_в_настройках_группы.
+    2. ACCESS_TOKEN=access_token_в_настройках_api_группы.
+    3. USER_ACCESS_TOKEN=user_access_token, получаем его тут: https://vkhost.github.io/, выбираем VK ME.
+    4. CONFIRMATION_TOKEN=то_что_должен_вернуть_сайт_при_подтверждении_адреса.
+    5. ADMINS_IN_CONV=444944367,10885998,26211044,500101793 просто оставьте так =)
+    6. WEBHOOK_ACCEPT=1
+    7. NEW_START=1
 5. Подгружаем требуемые пакеты
 6. Запускаем ngrok на порт, указанный в bot.py, адрес в bot.py должен быть 127.0.0.1 (в самом низу файла).
 7. Копируем адрес, который нам выделил ngrok (протокол http).
